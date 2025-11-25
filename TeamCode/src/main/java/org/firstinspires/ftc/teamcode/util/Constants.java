@@ -27,7 +27,7 @@ public class Constants {
 
     /* -------------------------------------------- INTAKE CONSTANTS -------------------------------------------- */
 
-    public static double intakeInPower = -0.85;
+    public static double intakeInPower = -1;
     public static double intakeOutPower = 1;
 
     /* -------------------------------------------- SHOOT CONSTANTS -------------------------------------------- */
@@ -35,6 +35,7 @@ public class Constants {
     public static double shootPower = 0.92;
     public static double readyPower = -1.0;
     public static double reverseStopPower = 1;
+    public static double lowerShootPower = 0.7;
 
     public static double kP = 0.0004; // to make response faser
     public static double kI = 0.00005; // for undershoot
