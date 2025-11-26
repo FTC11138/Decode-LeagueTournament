@@ -43,7 +43,7 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     private static final double MAX_DT = 0.05;  // 50 ms
 
 
-    private static final double ticksPerRev = 1440.0;
+    private static final double ticksPerRev = 751.8;
     private static final double gearRatio = 108.0 / 258.0;
     private static final double ticksPerDeg = (ticksPerRev * gearRatio) / 360.0;
 

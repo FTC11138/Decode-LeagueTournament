@@ -20,8 +20,8 @@ public class IntakeSubsystem extends RE_SubsystemBase {
         OUT
     }
 
-    public IntakeSubsystem(HardwareMap hardwareMap, String roller) {
-        this.intakeMotor = hardwareMap.get(DcMotorEx.class, roller);
+    public IntakeSubsystem(HardwareMap hardwareMap, String motorName) {
+        this.intakeMotor = hardwareMap.get(DcMotorEx.class, motorName);
 
         intakeState = IntakeState.STOP;
 
