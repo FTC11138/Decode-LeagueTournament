@@ -29,7 +29,7 @@ public class CameraSubsystem extends RE_SubsystemBase {
 
     private final double minRange = 1.0;
     private final double maxRange = 3.0;
-    private double CAMERA_HEIGHT_M = 0.30; // the actual lens heigh in meters
+    private double CAMERA_HEIGHT_M = 0.39267; // the actual lens heigh in meters
     private double TAG_HEIGHT_M    = 1.22;     // center of april tag heigh make sure to do ceneter
     private double CAMERA_PITCH_RAD = toRadians(0.0); //keep perpendicular to the ground
 
