@@ -14,6 +14,55 @@ import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;
 import java.util.Arrays;
 import java.util.List;
 
+
+
+/*
+ *  ===================== SPINDEXER SLOT MAP =====================
+ *
+ *  Slots are FIXED positions on the robot.
+ *  The plate rotates, but the slots do not move.
+ *
+ *                 FRONT OF ROBOT
+ *                    (Shooter)
+ *
+ *                        ^
+ *                        |
+ *                        |
+ *                    [ SLOT_1 ]
+ *                     (Front)
+ *
+ *               /                   \
+ *              /                     \
+ *             /                       \
+ *
+ *      [ SLOT_2 ]                 [ SLOT_3 ]
+ *     (Back Left)                (Back Right)
+ *
+ *
+ *  Rotation Conventions:
+ *  ----------------------
+ *  - CW  rotation (negative direction) shoots balls:
+ *        SLOT_1 → SLOT_3 → SLOT_2 → SLOT_1 → ...
+ *
+ *  - CCW rotation (positive direction) moves balls:
+ *        SLOT_1 → SLOT_2 → SLOT_3 → SLOT_1 → ...
+ *
+ *  Encoder Model:
+ *  --------------
+ *  - Each full rotation = TICKS_PER_REV encoder ticks.
+ *  - Each slot is exactly 120° apart → TICKS_PER_SLOT = TICKS_PER_REV / 3.
+ *
+ *  Examples:
+ *      rotateBallToShooter(SLOT_2)
+ *          SLOT_2 → SLOT_3 → SLOT_1 (2 CCW steps)
+ *
+ *      rotateBallToShooter(SLOT_3)
+ *          SLOT_3 → SLOT_1 (1 CCW step)
+ *
+ *  ================================================================
+ */
+
+
 /**
  * Spindexer driven by a motor with encoder.
  *
