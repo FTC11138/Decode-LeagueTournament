@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.hardware.subsystems;
 
 import static java.lang.Math.abs;
 
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -26,24 +27,28 @@ import java.util.List;
 public class SpindexerSubsystem extends RE_SubsystemBase {
 
     // === Hardware ===
-    private final DcMotorEx spindexerMotor;
-    private final ColorSensor[][] slotSensors = new ColorSensor[3][2];
+    private final DcMotorEx spindexerEncoder;
+    private final CRServo spindexerServo;
+    private final ColorSensor[][] slotSensors;
 
     // === Encoder / motion tuning (TODO: tune on robot) ===
     // TICKS_PER_SLOT = absolute encoder tick change for ONE 120° step CW.
-    private static final double TICKS_PER_SLOT = 1000.0; // TODO: tune this
-    private static final double POSITION_TOLERANCE_TICKS = 50.0;
+    private static final int TICKS_PER_REV = 1000; // TODO: tune this
+    private static final int TICKS_PER_SLOT = TICKS_PER_REV / 3;
+    private static final int POSITION_TOLERANCE_TICKS = 50;
 
     // Motor powers (can be tuned)
-    private static final double CW_POWER  = 0.4;  // shooting direction
-    private static final double CCW_POWER = -0.4; // sorting/loading direction
+    private static final double CW_POWER  = -1;  // shooting direction
+    private static final double CCW_POWER = 1; // sorting/loading direction
+    private static final double LOAD_POWER = 1;
+    private static final double STOP_POWER = 0;
 
     // === Enums ===
 
     public enum Slot {
-        SLOT0(0),
-        SLOT1(1),
-        SLOT2(2);
+        SLOT_1(0),
+        SLOT_2(1),
+        SLOT_3(2);
 
         public final int index;
         Slot(int i) { this.index = i; }
@@ -53,7 +58,7 @@ public class SpindexerSubsystem extends RE_SubsystemBase {
             for (Slot s : values()) {
                 if (s.index == i) return s;
             }
-            return SLOT0;
+            return SLOT_1;
         }
     }
 
@@ -66,7 +71,7 @@ public class SpindexerSubsystem extends RE_SubsystemBase {
 
     public enum SpindexerState {
         IDLE,
-        MOVING,
+        LOADING,
         SHOOTING_CW,
         SORTING_CCW
     }
@@ -83,21 +88,23 @@ public class SpindexerSubsystem extends RE_SubsystemBase {
 
     // === State ===
 
-    private Slot frontSlot = Slot.SLOT0;             // which slot is at the launcher
-    private final SlotInfo[] slotInfos = new SlotInfo[3];
+    private final SlotInfo[] slotInfos;
 
-    private SpindexerState state = SpindexerState.IDLE;
-    private double targetTicks = Double.NaN;
+    private SpindexerState state;
+    private int targetPos;
 
     public SpindexerSubsystem(HardwareMap hardwareMap,
-                              String motorName,
+                              String encoderName, String servoName,
                               String slot0SensorAName, String slot0SensorBName,
                               String slot1SensorAName, String slot1SensorBName,
                               String slot2SensorAName, String slot2SensorBName) {
 
-        this.spindexerMotor = hardwareMap.get(DcMotorEx.class, motorName);
+        this.spindexerEncoder = hardwareMap.get(DcMotorEx.class, encoderName);
+        this.spindexerServo = hardwareMap.get(CRServo.class, servoName);
+
 
         // Color sensors (2 per slot)
+        slotSensors = new ColorSensor[3][2];
         slotSensors[0][0] = hardwareMap.get(ColorSensor.class, slot0SensorAName);
         slotSensors[0][1] = hardwareMap.get(ColorSensor.class, slot0SensorBName);
         slotSensors[1][0] = hardwareMap.get(ColorSensor.class, slot1SensorAName);
@@ -106,30 +113,27 @@ public class SpindexerSubsystem extends RE_SubsystemBase {
         slotSensors[2][1] = hardwareMap.get(ColorSensor.class, slot2SensorBName);
 
         // Init slot info
-        slotInfos[0] = new SlotInfo(Slot.SLOT0, BallColor.UNKNOWN);
-        slotInfos[1] = new SlotInfo(Slot.SLOT1, BallColor.UNKNOWN);
-        slotInfos[2] = new SlotInfo(Slot.SLOT2, BallColor.UNKNOWN);
+        slotInfos = new SlotInfo[3];
+        slotInfos[0] = new SlotInfo(Slot.SLOT_1, BallColor.UNKNOWN);
+        slotInfos[1] = new SlotInfo(Slot.SLOT_2, BallColor.UNKNOWN);
+        slotInfos[2] = new SlotInfo(Slot.SLOT_3, BallColor.UNKNOWN);
 
         // Motor setup
-        spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        spindexerMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        spindexerEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        spindexerEncoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        // Assume starting aligned with SLOT0 at front
-        targetTicks = getCurrentTicks();
         state = SpindexerState.IDLE;
+        targetPos = 0;
 
         Robot.getInstance().subsystems.add(this);
     }
 
-    // === Public getters ===
-
-    public SpindexerState getState() {
-        return state;
+    public SpindexerState getSpindexerState() {
+        return this.state;
     }
 
-    public Slot getFrontSlot() {
-        return frontSlot;
+    public int getTargetPos() {
+        return this.targetPos;
     }
 
     public List<SlotInfo> getSlotInfos() {
@@ -140,63 +144,56 @@ public class SpindexerSubsystem extends RE_SubsystemBase {
         return slotInfos[slot.index].color;
     }
 
-    public double getCurrentTicks() {
-        return spindexerMotor.getCurrentPosition();
+    public int getCurrentPos() {
+        return spindexerEncoder.getCurrentPosition();
     }
 
-    // === Homing helper ===
 
-    /**
-     * If you manually align a certain slot in front of the launcher,
-     * call this to reset encoder & logical front slot.
-     */
-    public void homeCurrentPositionToSlot(Slot slot) {
-        spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontSlot = slot;
-        targetTicks = getCurrentTicks();
-        state = SpindexerState.IDLE;
-    }
 
     // === High-level movement API ===
 
     /** Advance one slot in CW direction (shooting). */
-    public void advanceOneSlotCWForShooting() {
+    public void shootSingleBall() {
         if (state != SpindexerState.IDLE) return;
 
         state = SpindexerState.SHOOTING_CW;
 
-        // Update logical front slot
-        int nextIndex = (frontSlot.index + 1) % 3;
-        frontSlot = Slot.fromIndex(nextIndex);
-
         // Move motor one "slot" worth of ticks CW
-        double current = getCurrentTicks();
-        targetTicks = current + TICKS_PER_SLOT;
-        spindexerMotor.setPower(CW_POWER);
+        int current = getCurrentPos();
+        targetPos = current + (TICKS_PER_SLOT * (int) Math.ceil(CW_POWER));
     }
 
-    /** Advance one slot in CCW direction (sorting/loading). */
-    public void advanceOneSlotCCWForSorting() {
+    /** Advance one slot in CCW direction (loading). */
+    public void loadSingleBall() {
+        if (state != SpindexerState.IDLE) return;
+
+        state = SpindexerState.LOADING;
+
+        // Move motor one "slot" worth of ticks CCW
+        int current = getCurrentPos();
+        targetPos = current + (TICKS_PER_SLOT * (int) Math.ceil(LOAD_POWER));
+    }
+
+    /**
+     * Rotate CCW (sorting direction) so that the given slot ends up
+     * at the shooting position in one continuous move (0–2 slots CCW).
+     */
+    public void rotateSlotToShoot(Slot desiredFront) {
         if (state != SpindexerState.IDLE) return;
 
         state = SpindexerState.SORTING_CCW;
 
-        // Update logical front slot
-        int nextIndex = (frontSlot.index - 1 + 3) % 3;
-        frontSlot = Slot.fromIndex(nextIndex);
-
-        // Move motor one "slot" worth of ticks CCW
-        double current = getCurrentTicks();
-        targetTicks = current - TICKS_PER_SLOT;
-        spindexerMotor.setPower(CCW_POWER);
+        int current = getCurrentPos();
+        targetPos = current + (TICKS_PER_SLOT * (int) Math.ceil(CCW_POWER));
     }
+
+
 
     /** Stop motion & hold current slot. */
     public void stop() {
-        spindexerMotor.setPower(0.0);
+        spindexerServo.setPower(0.0);
         state = SpindexerState.IDLE;
-        targetTicks = getCurrentTicks();
+        targetPos = getCurrentPos();
     }
 
     // === Color logic ===
@@ -244,38 +241,48 @@ public class SpindexerSubsystem extends RE_SubsystemBase {
     // === Internal helpers ===
 
     private boolean isAtTarget() {
-        if (Double.isNaN(targetTicks)) return false;
-        return abs(getCurrentTicks() - targetTicks) <= POSITION_TOLERANCE_TICKS;
+        return abs(getCurrentPos() - targetPos) <= POSITION_TOLERANCE_TICKS;
+    }
+
+    private void updateServoPower() {
+        switch (state) {
+            case SHOOTING_CW:
+                spindexerServo.setPower(CW_POWER);
+                break;
+            case LOADING:
+                spindexerServo.setPower(CCW_POWER);
+                break;
+            case IDLE:
+            default:
+                spindexerServo.setPower(STOP_POWER);
+                break;
+        }
     }
 
     // === RE_SubsystemBase hooks ===
 
     @Override
     public void updateData() {
-        // Hook telemetry struct if you want
-        // Robot.getInstance().data.spindexerFrontSlot = frontSlot;
-        // Robot.getInstance().data.spindexerState = state;
-        // Robot.getInstance().data.spindexerSlot0Color = slotInfos[0].color;
+        // Robot.getInstance().data.spindexerState      = state;
+        // Robot.getInstance().data.spindexerTargetPos  = targetPos;
+        // Robot.getInstance().data.spindexerCurrentPos = getCurrentPos();
     }
 
     @Override
     public void periodic() {
-        // Handle motion completion
-        switch (state) {
-            case SHOOTING_CW:
-            case SORTING_CCW:
-            case MOVING:
-                if (isAtTarget()) {
-                    spindexerMotor.setPower(0.0);
-                    state = SpindexerState.IDLE;
-                }
-                break;
-            case IDLE:
-            default:
-                break;
+        // Drive servo based on current state
+        updateServoPower();
+
+        // Check if we've reached the target encoder position
+        if (state != SpindexerState.IDLE) {
+            if (isAtTarget()) {
+                stop(); // sets state = IDLE and stops servo
+            }
         }
 
-        // Continuously update slot colors
+        // Continuously update colors
         updateSlotColors();
     }
+
+
 }
