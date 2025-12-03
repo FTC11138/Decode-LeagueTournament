@@ -18,10 +18,21 @@ public class Configuration {
 
     public final String intakeMotor = "intakeMotor";
 
+    public final String spindexerServo = "spindexerServo";
 
+    public final String spindexerEncoder = "spindexerEncoder";
 
+    public final String slot0SensorA = "slot0SensorA";
 
+    public final String slot0SensorB = "slot0SensorB";
 
+    public final String slot1SensorA = "slot1SensorA";
+
+    public final String slot1SensorB = "slot1SensorB";
+
+    public final String slot2SensorA = "slot2SensorA";
+
+    public final String slot2SensorB = "slot2SensorB";
 
 
     // Servos

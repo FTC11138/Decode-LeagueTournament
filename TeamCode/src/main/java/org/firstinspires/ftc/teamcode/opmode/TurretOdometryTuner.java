@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opmode.test;
+package org.firstinspires.ftc.teamcode.opmode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -34,7 +34,7 @@ import org.firstinspires.ftc.teamcode.util.Constants;
  *      start      : +maxPower
  *      back       : -maxPower
  */
-@TeleOp(name = "Turret Odometry Tuner", group = "Test")
+@TeleOp(name = "Turret Odometry Tuner")
 public class TurretOdometryTuner extends LinearOpMode {
 
     // --- Drivetrain (edit names to match your config) ---
