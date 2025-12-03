@@ -11,15 +11,15 @@ import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;
 
 public class ShooterSubsystem extends RE_SubsystemBase {
 
-    private final DcMotorEx shootMotor;
+    private final DcMotorEx shooterMotor;
 
-    public enum ShootState {
+    public enum ShooterState {
         LOWERPOWER,
         SHOOT,
         STOP
     }
 
-    public ShootState shootState;
+    public ShooterState shooterState;
 
     private double ticksPerRev;
     private static final double MAX_RPM = 6000.0;
@@ -29,21 +29,21 @@ public class ShooterSubsystem extends RE_SubsystemBase {
 
     public ShooterSubsystem(HardwareMap hardwareMap, String motorName) {
 
-        shootMotor = hardwareMap.get(DcMotorEx.class, motorName);
+        shooterMotor = hardwareMap.get(DcMotorEx.class, motorName);
 
-        shootMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        shootMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        shootMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        shooterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        ticksPerRev = shootMotor.getMotorType().getTicksPerRev();
+        ticksPerRev = shooterMotor.getMotorType().getTicksPerRev();
         maxTicksPerSecond = (ticksPerRev * MAX_RPM) / 60.0;
 
-        shootMotor.setPIDFCoefficients(
+        shooterMotor.setPIDFCoefficients(
                 DcMotor.RunMode.RUN_USING_ENCODER,
                 new PIDFCoefficients(Constants.kP, Constants.kI, Constants.kD, Constants.kF)
         );
 
-        shootState = ShootState.STOP;
+        shooterState = ShooterState.STOP;
 
         Robot.getInstance().subsystems.add(this);
     }
@@ -55,43 +55,43 @@ public class ShooterSubsystem extends RE_SubsystemBase {
 //        Robot.getInstance().data.shootTargetVelocity = targetVelocity;
     }
 
-    public void updateShootState(ShootState newState) {
-        shootState = newState;
+    public void updateShooterState(ShooterState newState) {
+        shooterState = newState;
     }
 
     @Override
     public void periodic() {
 
-        shootMotor.setPIDFCoefficients(
+        shooterMotor.setPIDFCoefficients(
                 DcMotor.RunMode.RUN_USING_ENCODER,
                 new PIDFCoefficients(Constants.kP, Constants.kI, Constants.kD, Constants.kF)
         );
 
-        switch (shootState) {
+        switch (shooterState) {
 
             case LOWERPOWER:
                 targetVelocity = Constants.lowerShootPower * maxTicksPerSecond;
-                shootMotor.setVelocity(targetVelocity);
+                shooterMotor.setVelocity(targetVelocity);
                 break;
 
             case SHOOT:
                 targetVelocity = Constants.shootPower * maxTicksPerSecond;
-                shootMotor.setVelocity(targetVelocity);
+                shooterMotor.setVelocity(targetVelocity);
                 break;
 
             case STOP:
                 targetVelocity = 0.0;
-                shootMotor.setPower(0.0);
+                shooterMotor.setPower(0.0);
                 break;
         }
     }
 
     public double getCurrentVelocity() {
-        return shootMotor.getVelocity();
+        return shooterMotor.getVelocity();
     }
 
     public double getCurrentRPM() {
-        return (shootMotor.getVelocity() / ticksPerRev) * 60.0;
+        return (shooterMotor.getVelocity() / ticksPerRev) * 60.0;
     }
 
     public double getTargetVelocity() {
@@ -100,7 +100,7 @@ public class ShooterSubsystem extends RE_SubsystemBase {
 
     public void stopShooter() {
         targetVelocity = 0;
-        shootState = ShootState.STOP;
-        shootMotor.setPower(0);
+        shooterState = ShooterState.STOP;
+        shooterMotor.setPower(0);
     }
 }

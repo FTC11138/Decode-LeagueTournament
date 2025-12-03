@@ -52,9 +52,9 @@ public class TurretSubsystem extends RE_SubsystemBase {
         lastNanos = System.nanoTime();
     }
 
-    public void setTurretState(TurretState state) {
-        this.turretState = state;
-        if (state == TurretState.MANUAL) {
+    public void setTurretState(TurretState newstate) {
+        this.turretState = newstate;
+        if (newstate == TurretState.MANUAL) {
             setTurretPower(0.0);
         } else {
             resetPID();

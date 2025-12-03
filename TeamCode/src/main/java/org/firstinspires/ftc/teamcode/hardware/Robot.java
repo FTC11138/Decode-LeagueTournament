@@ -9,7 +9,9 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.CameraSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.SpindexerSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.pedroPathing.PedroPathingConstants;
 import org.firstinspires.ftc.teamcode.util.Configuration;
 import org.firstinspires.ftc.teamcode.util.Globals;
@@ -32,11 +34,13 @@ public class Robot {
 
     public CameraSubsystem cameraSubsystem;
 
-    public TurretOdometrySubsystem turretOdometrySubsystem;
+    public TurretSubsystem turretSubsystem;
 
     public ShooterSubsystem shooterSubsystem;
 
     public IntakeSubsystem intakeSubsystem;
+
+    public SpindexerSubsystem spindexerSubsystem;
 
     public ArrayList<RE_SubsystemBase> subsystems;
     public Configuration config = new Configuration();
@@ -58,10 +62,10 @@ public class Robot {
                 names.limelight
         );
 
-        turretOdometrySubsystem = new TurretOdometrySubsystem(
+        turretSubsystem = new TurretSubsystem(
                 this.hardwareMap,
                 names.turretMotor,
-                follower
+                cameraSubsystem
         );
 
         shooterSubsystem = new ShooterSubsystem(
@@ -73,6 +77,20 @@ public class Robot {
                 this.hardwareMap,
                 names.intakeMotor
         );
+
+        spindexerSubsystem = new SpindexerSubsystem(
+                this.hardwareMap,
+                names.spindexerEncoder,
+                names.spindexerServo,
+                names.slot0SensorA,
+                names.slot0SensorB,
+                names.slot1SensorA,
+                names.slot1SensorB,
+                names.slot2SensorA,
+                names.slot2SensorB
+        );
+
+
 
         subsystems = new ArrayList<>();
 
