@@ -27,9 +27,9 @@ public class ShooterSubsystem extends RE_SubsystemBase {
 
     private double targetVelocity = 0;
 
-    public ShooterSubsystem(HardwareMap hardwareMap, String shootroller) {
+    public ShooterSubsystem(HardwareMap hardwareMap, String motorName) {
 
-        shootMotor = hardwareMap.get(DcMotorEx.class, shootroller);
+        shootMotor = hardwareMap.get(DcMotorEx.class, motorName);
 
         shootMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         shootMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);

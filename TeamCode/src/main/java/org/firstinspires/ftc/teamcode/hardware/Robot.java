@@ -7,6 +7,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.CameraSubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.IntakeSubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsystem;
 import org.firstinspires.ftc.teamcode.pedroPathing.PedroPathingConstants;
 import org.firstinspires.ftc.teamcode.util.Configuration;
 import org.firstinspires.ftc.teamcode.util.Globals;
@@ -29,6 +32,12 @@ public class Robot {
 
     public CameraSubsystem cameraSubsystem;
 
+    public TurretOdometrySubsystem turretOdometrySubsystem;
+
+    public ShooterSubsystem shooterSubsystem;
+
+    public IntakeSubsystem intakeSubsystem;
+
     public ArrayList<RE_SubsystemBase> subsystems;
     public Configuration config = new Configuration();
 
@@ -44,7 +53,26 @@ public class Robot {
 
         if (!Globals.IS_AUTO) follower.startTeleopDrive();
 
-        cameraSubsystem = new CameraSubsystem(this.hardwareMap, names.limelight);
+        cameraSubsystem = new CameraSubsystem(
+                this.hardwareMap,
+                names.limelight
+        );
+
+        turretOdometrySubsystem = new TurretOdometrySubsystem(
+                this.hardwareMap,
+                names.turretMotor,
+                follower
+        );
+
+        shooterSubsystem = new ShooterSubsystem(
+                this.hardwareMap,
+                names.shootMotor
+        );
+
+        intakeSubsystem = new IntakeSubsystem(
+                this.hardwareMap,
+                names.intakeMotor
+        );
 
         subsystems = new ArrayList<>();
 
