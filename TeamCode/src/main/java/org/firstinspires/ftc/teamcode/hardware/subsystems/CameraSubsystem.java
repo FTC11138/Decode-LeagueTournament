@@ -42,15 +42,21 @@ public class CameraSubsystem extends RE_SubsystemBase {
 
     public enum CameraState {
         ON,
-        OFF }
+        OFF
+    }
+
     public enum ShootDistance {
         INRANGE,
-        OUTOFRANGE }
+        OUTOFRANGE
+    }
+
     public enum Obelisk {
         PPG,
         PGP,
         GPP,
-        PPP }
+        PPP
+    }
+
 
     public CameraSubsystem(HardwareMap hardwareMap, String limelightName) {
         this.limelight = hardwareMap.get(Limelight3A.class, limelightName);

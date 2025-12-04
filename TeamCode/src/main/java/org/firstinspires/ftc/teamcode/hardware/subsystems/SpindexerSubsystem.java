@@ -35,7 +35,7 @@ import java.util.List;
  *              /                     \
  *             /                       \
  *
- *      [ SLOT_2 ]                 [ SLOT_3 ]
+ *      [ SLOT_3 ]                 [ SLOT_2 ]
  *     (Back Left)                (Back Right)
  *
  *
@@ -53,11 +53,11 @@ import java.util.List;
  *  - Each slot is exactly 120° apart → TICKS_PER_SLOT = TICKS_PER_REV / 3.
  *
  *  Examples:
- *      rotateBallToShooter(SLOT_2)
- *          SLOT_2 → SLOT_3 → SLOT_1 (2 CCW steps)
- *
  *      rotateBallToShooter(SLOT_3)
- *          SLOT_3 → SLOT_1 (1 CCW step)
+ *          SLOT_3 → SLOT_2 → SLOT_1 (2 CCW steps)
+ *
+ *      rotateBallToShooter(SLOT_2)
+ *          SLOT_2 → SLOT_1 (1 CCW step)
  *
  *  ================================================================
  */
@@ -212,6 +212,17 @@ public class SpindexerSubsystem extends RE_SubsystemBase {
         targetPos = current + (TICKS_PER_SLOT * (int) Math.ceil(CW_POWER));
     }
 
+    /** Shoots all balls by rotating 1 revolution CW */
+    public void shootAllBalls() {
+        if (state != SpindexerState.IDLE) return;
+
+        state = SpindexerState.SHOOTING_CW;
+
+        // Move motor one "slot" worth of ticks CW
+        int current = getCurrentPos();
+        targetPos = current + (TICKS_PER_REV * (int) Math.ceil(CW_POWER));
+    }
+
     /** Advance one slot in CCW direction (loading). */
     public void loadSingleBall() {
         if (state != SpindexerState.IDLE) return;
@@ -228,12 +239,22 @@ public class SpindexerSubsystem extends RE_SubsystemBase {
      * at the shooting position in one continuous move (0–2 slots CCW).
      */
     public void rotateSlotToShoot(Slot desiredFront) {
+        assert desiredFront != null;
+
         if (state != SpindexerState.IDLE) return;
 
         state = SpindexerState.SORTING_CCW;
 
         int current = getCurrentPos();
-        targetPos = current + (TICKS_PER_SLOT * (int) Math.ceil(CCW_POWER));
+        targetPos = current + (desiredFront.index * TICKS_PER_SLOT * (int) Math.ceil(CCW_POWER));
+    }
+
+
+    public Slot getGreenBallSlot() {
+        for (Slot slot : Slot.values()) {
+            if (getBallColor(slot) == BallColor.GREEN) return slot;
+        }
+        return null;
     }
 
 
