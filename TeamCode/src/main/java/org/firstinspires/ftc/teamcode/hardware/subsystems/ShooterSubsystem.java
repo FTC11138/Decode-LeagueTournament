@@ -11,7 +11,8 @@ import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;
 
 public class ShooterSubsystem extends RE_SubsystemBase {
 
-    private final DcMotorEx shooterMotor;
+    private final DcMotorEx shooterMotor1; 
+    private final DcMotorEx shooterMotor2;
 
     public enum ShooterState {
         LOWERPOWER,
@@ -27,32 +28,30 @@ public class ShooterSubsystem extends RE_SubsystemBase {
 
     private double targetVelocity = 0;
 
-    public ShooterSubsystem(HardwareMap hardwareMap, String motorName) {
+    public ShooterSubsystem(HardwareMap hardwareMap, String motorName1, String motorName2) {
 
-        shooterMotor = hardwareMap.get(DcMotorEx.class, motorName);
+        shooterMotor1 = hardwareMap.get(DcMotorEx.class, motorName1);
+        shooterMotor2 = hardwareMap.get(DcMotorEx.class, motorName2);
 
-        shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        shooterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        shooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        initMotor(shooterMotor1);
+        initMotor(shooterMotor2);
 
-        ticksPerRev = shooterMotor.getMotorType().getTicksPerRev();
+        ticksPerRev = shooterMotor1.getMotorType().getTicksPerRev();
         maxTicksPerSecond = (ticksPerRev * MAX_RPM) / 60.0;
-
-        shooterMotor.setPIDFCoefficients(
-                DcMotor.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(Constants.kP, Constants.kI, Constants.kD, Constants.kF)
-        );
 
         shooterState = ShooterState.STOP;
 
         Robot.getInstance().subsystems.add(this);
     }
 
-    @Override
-    public void updateData() {
-//        Robot.getInstance().data.shootState = shootState;
-//        Robot.getInstance().data.shootVelocity = shootMotor.getVelocity();
-//        Robot.getInstance().data.shootTargetVelocity = targetVelocity;
+    private void initMotor(DcMotorEx motor) {
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor.setPIDFCoefficients(
+                DcMotor.RunMode.RUN_USING_ENCODER,
+                new PIDFCoefficients(Constants.kP, Constants.kI, Constants.kD, Constants.kF)
+        );
     }
 
     public void updateShooterState(ShooterState newState) {
@@ -62,36 +61,33 @@ public class ShooterSubsystem extends RE_SubsystemBase {
     @Override
     public void periodic() {
 
-        shooterMotor.setPIDFCoefficients(
-                DcMotor.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(Constants.kP, Constants.kI, Constants.kD, Constants.kF)
-        );
-
         switch (shooterState) {
-
             case LOWERPOWER:
                 targetVelocity = Constants.lowerShootPower * maxTicksPerSecond;
-                shooterMotor.setVelocity(targetVelocity);
+                shooterMotor1.setVelocity(targetVelocity);
+                shooterMotor2.setVelocity(targetVelocity);
                 break;
 
             case SHOOT:
                 targetVelocity = Constants.shootPower * maxTicksPerSecond;
-                shooterMotor.setVelocity(targetVelocity);
+                shooterMotor1.setVelocity(targetVelocity);
+                shooterMotor2.setVelocity(targetVelocity);
                 break;
 
             case STOP:
                 targetVelocity = 0.0;
-                shooterMotor.setPower(0.0);
+                shooterMotor1.setPower(0.0);
+                shooterMotor2.setPower(0.0);
                 break;
         }
     }
 
     public double getCurrentVelocity() {
-        return shooterMotor.getVelocity();
+        return shooterMotor1.getVelocity();
     }
 
     public double getCurrentRPM() {
-        return (shooterMotor.getVelocity() / ticksPerRev) * 60.0;
+        return (shooterMotor1.getVelocity() / ticksPerRev) * 60.0;
     }
 
     public double getTargetVelocity() {
@@ -101,6 +97,7 @@ public class ShooterSubsystem extends RE_SubsystemBase {
     public void stopShooter() {
         targetVelocity = 0;
         shooterState = ShooterState.STOP;
-        shooterMotor.setPower(0);
+        shooterMotor1.setPower(0);
+        shooterMotor2.setPower(0);
     }
 }

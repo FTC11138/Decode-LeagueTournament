@@ -70,7 +70,8 @@ public class Robot {
 
         shooterSubsystem = new ShooterSubsystem(
                 this.hardwareMap,
-                names.shootMotor
+                names.shootMotor1,
+                names.shootMotor2
         );
 
         intakeSubsystem = new IntakeSubsystem(

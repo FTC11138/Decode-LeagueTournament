@@ -14,7 +14,8 @@ public class Configuration {
 
     public final String turretMotor = "turretMotor";
 
-    public final String shootMotor = "shootMotor";
+    public final String shootMotor1 = "shootMotor1";
+    public final String shootMotor2 = "shootMotor2";
 
     public final String intakeMotor = "intakeMotor";
 
