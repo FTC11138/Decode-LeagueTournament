@@ -34,8 +34,8 @@ public class TurretSubsystem extends RE_SubsystemBase {
     private static final double gearRatio = 108.0 / 258.0;
     private static final double ticksPerDeg = (ticksPerRev * gearRatio) / 360.0;
 
-    private static final double leftlim = -90.0;
-    private static final double rightlim = 90.0;
+    private static final double leftlim = 0;
+    private static final double rightlim = 180.0;
 
     public TurretSubsystem(HardwareMap hw, String motorName, CameraSubsystem camera) {
         this.turretMotor = hw.get(DcMotorEx.class, motorName);
