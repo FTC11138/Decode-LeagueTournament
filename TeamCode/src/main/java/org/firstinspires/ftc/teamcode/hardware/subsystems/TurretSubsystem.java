@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.hardware.subsystems;
 
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.arcrobotics.ftclib.hardware.ServoEx;
+import com.arcrobotics.ftclib.hardware.SimpleServo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.hardware.Robot;
@@ -10,9 +10,8 @@ import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;
 
 public class TurretSubsystem extends RE_SubsystemBase {
 
-    private final DcMotorEx turretMotor;
+    private final ServoEx turretServo;
     private final CameraSubsystem camera;
-
 
     private double integral = 0.0;
     private double lastErrDeg = 0.0;
@@ -29,24 +28,26 @@ public class TurretSubsystem extends RE_SubsystemBase {
     private static final double MIN_DT = 1e-3;  // 1 ms
     private static final double MAX_DT = 0.05;  // 50 ms
 
+    // Axon servo range configuration
+    private static final double SERVO_MIN_ANGLE = 0.0;      // degrees
+    private static final double SERVO_MAX_ANGLE = 355.0;    // degrees (Axon max range)
 
-    private static final double ticksPerRev = 1440.0;
-    private static final double gearRatio = 108.0 / 258.0;
-    private static final double ticksPerDeg = (ticksPerRev * gearRatio) / 360.0;
+    // Turret mechanical limits (adjust these to your actual turret range)
+    private static final double LEFT_LIMIT_DEG = 0.0;
+    private static final double RIGHT_LIMIT_DEG = 180.0;
 
-    private static final double leftlim = 0;
-    private static final double rightlim = 180.0;
+    // Current target angle for manual control
+    private double targetAngleDeg = 90.0;  // Start centered
 
-    public TurretSubsystem(HardwareMap hw, String motorName, CameraSubsystem camera) {
-        this.turretMotor = hw.get(DcMotorEx.class, motorName);
+    public TurretSubsystem(HardwareMap hw, String servoName, CameraSubsystem camera) {
+        // Initialize Axon servo with FTCLib
+        this.turretServo = new SimpleServo(hw, servoName, SERVO_MIN_ANGLE, SERVO_MAX_ANGLE);
         this.camera = camera;
 
-        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
         turretState = TurretState.MANUAL;
-        setTurretPower(0.0);
+
+        // Set initial position to center
+        turretServo.turnToAngle(targetAngleDeg);
 
         Robot.getInstance().subsystems.add(this);
         lastNanos = System.nanoTime();
@@ -55,7 +56,8 @@ public class TurretSubsystem extends RE_SubsystemBase {
     public void setTurretState(TurretState newstate) {
         this.turretState = newstate;
         if (newstate == TurretState.MANUAL) {
-            setTurretPower(0.0);
+            // When switching to manual, hold current position
+            targetAngleDeg = getTurretAngleDeg();
         } else {
             resetPID();
         }
@@ -69,27 +71,55 @@ public class TurretSubsystem extends RE_SubsystemBase {
         setTurretState(enable ? TurretState.AUTO_AIM : TurretState.MANUAL);
     }
 
-    public void setTurretPower(double pwr) {
-        double angleDeg = getTurretAngleDeg();
-
-        // clamp movement
-        if (angleDeg <= leftlim && pwr < 0) {
-            pwr = 0;
-        } else if (angleDeg >= rightlim && pwr > 0) {
-            pwr = 0;
-        }
-
-        turretMotor.setPower(clamp(pwr, -1.0, 1.0));
+    /**
+     * Set turret angle directly (for manual control)
+     * @param angleDeg Target angle in degrees
+     */
+    public void setTurretAngle(double angleDeg) {
+        targetAngleDeg = clamp(angleDeg, LEFT_LIMIT_DEG, RIGHT_LIMIT_DEG);
+        turretServo.turnToAngle(targetAngleDeg);
     }
 
+    /**
+     * Move turret by a relative amount (for manual control)
+     * @param deltaDeg Change in angle (positive = right, negative = left)
+     */
+    public void moveTurretRelative(double deltaDeg) {
+        targetAngleDeg = clamp(targetAngleDeg + deltaDeg, LEFT_LIMIT_DEG, RIGHT_LIMIT_DEG);
+        turretServo.turnToAngle(targetAngleDeg);
+    }
+
+    /**
+     * Get current turret angle from servo
+     * @return Current angle in degrees
+     */
     public double getTurretAngleDeg() {
-        return turretMotor.getCurrentPosition() / ticksPerDeg;
+        return turretServo.getAngle();
+    }
+
+    /**
+     * Get target angle (useful for telemetry)
+     * @return Target angle in degrees
+     */
+    public double getTargetAngleDeg() {
+        return targetAngleDeg;
+    }
+
+    /**
+     * Check if turret is at target position
+     * @param toleranceDeg Tolerance in degrees
+     * @return True if within tolerance
+     */
+    public boolean isAtTarget(double toleranceDeg) {
+        return Math.abs(getTurretAngleDeg() - targetAngleDeg) < toleranceDeg;
     }
 
     @Override
     public void updateData() {
-//        Robot.getInstance().data.turretState = turretState.name();
-//        Robot.getInstance().data.turretAngleDeg = getTurretAngleDeg();
+        // Uncomment and update your Robot data structure as needed
+        // Robot.getInstance().data.turretState = turretState.name();
+        // Robot.getInstance().data.turretAngleDeg = getTurretAngleDeg();
+        // Robot.getInstance().data.turretTargetAngleDeg = targetAngleDeg;
     }
 
     @Override
@@ -99,7 +129,6 @@ public class TurretSubsystem extends RE_SubsystemBase {
         }
     }
 
-
     private void runAutoAimPID() {
         long now = System.nanoTime();
         double dt = (now - lastNanos) / 1e9;
@@ -108,58 +137,62 @@ public class TurretSubsystem extends RE_SubsystemBase {
         if (dt < MIN_DT) dt = MIN_DT;
         if (dt > MAX_DT) dt = MAX_DT;
 
+        // If no target detected, hold current position
         if (!camera.hasBasket()) {
-            setTurretPower(0.0);
+            targetAngleDeg = getTurretAngleDeg();
             lastErrDeg = 0.0;
             return;
         }
 
+        // Get yaw error from Limelight (negative = target is left, positive = target is right)
         double yawErrDeg = camera.getBasketYawDeg();
 
-
+        // Apply deadband
         if (Math.abs(yawErrDeg) < Constants.deadbandDeg) yawErrDeg = 0.0;
 
-
+        // Low-pass filter the error
         errFiltDeg = Constants.errAlpha * yawErrDeg + (1.0 - Constants.errAlpha) * errFiltDeg;
 
+        // Integral term with anti-windup
         integral += errFiltDeg * dt;
         if (yawErrDeg == 0.0) integral *= 0.5;
         integral = clamp(integral, -Constants.maxIntegral, Constants.maxIntegral);
 
+        // Derivative term
         double deriv = (errFiltDeg - lastErrDeg) / dt;
         deriv = clamp(deriv, -Constants.maxDeriv, Constants.maxDeriv);
         lastErrDeg = errFiltDeg;
 
-        double rawPower =
+        // Calculate correction angle using PID
+        double correctionDeg =
                 Constants.kP_v * errFiltDeg +
                         Constants.kI_v * integral +
                         Constants.kD_v * deriv;
 
-        if (yawErrDeg != 0.0 && Constants.kS > 0) {
-            rawPower += Math.signum(errFiltDeg) * Constants.kS;
-        }
+        // Calculate new target angle
+        // Current angle + correction (negative yaw error means turn left/decrease angle)
+        double currentAngle = getTurretAngleDeg();
+        targetAngleDeg = currentAngle - correctionDeg;  // Subtract because camera yaw is opposite
 
-        double maxPower = clamp(Constants.maxPower, 0.0, 1.0);
-        double power = clamp(rawPower, -maxPower, maxPower);
+        // Clamp to mechanical limits
+        targetAngleDeg = clamp(targetAngleDeg, LEFT_LIMIT_DEG, RIGHT_LIMIT_DEG);
 
-
-        if (Math.abs(power) >= maxPower - 1e-6 && Math.signum(power) == Math.signum(rawPower)) {
+        // Anti-windup: reduce integral if at limits
+        if ((targetAngleDeg <= LEFT_LIMIT_DEG || targetAngleDeg >= RIGHT_LIMIT_DEG)) {
             integral *= 0.95;
         }
 
-        setTurretPower(power);
+        // Command servo to target angle
+        turretServo.turnToAngle(targetAngleDeg);
     }
-
-
 
     private void resetPID() {
         integral = 0.0;
         lastErrDeg = 0.0;
         errFiltDeg = 0.0;
         lastNanos = System.nanoTime();
+        targetAngleDeg = getTurretAngleDeg();
     }
-
-
 
     private static double clamp(double v, double lo, double hi) {
         return Math.max(lo, Math.min(hi, v));
