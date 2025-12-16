@@ -81,14 +81,14 @@ public class Robot {
 
         spindexerSubsystem = new SpindexerSubsystem(
                 this.hardwareMap,
-                names.spindexerEncoder,
-                names.spindexerServo,
+                names.spindexerMotor,
                 names.slot0SensorA,
                 names.slot0SensorB,
                 names.slot1SensorA,
                 names.slot1SensorB,
                 names.slot2SensorA,
-                names.slot2SensorB
+                names.slot2SensorB,
+                cameraSubsystem
         );
 
 
