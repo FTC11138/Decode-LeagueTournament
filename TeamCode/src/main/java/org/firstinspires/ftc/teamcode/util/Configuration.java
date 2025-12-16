@@ -21,7 +21,7 @@ public class Configuration {
 
     public final String spindexerServo = "spindexerServo";
 
-    public final String spindexerEncoder = "spindexerEncoder";
+    public final String spindexerMotor = "spindexerMotor";
 
     public final String slot0SensorA = "slot0SensorA";
 

@@ -1,358 +1,322 @@
 package org.firstinspires.ftc.teamcode.hardware.subsystems;
 
-import static java.lang.Math.abs;
-
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.hardware.Robot;
 import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;
 
-import java.util.Arrays;
-import java.util.List;
-
-
-
-/*
- *  ===================== SPINDEXER SLOT MAP =====================
- *
- *  Slots are FIXED positions on the robot.
- *  The plate rotates, but the slots do not move.
- *
- *                 FRONT OF ROBOT
- *                    (Shooter)
- *
- *                        ^
- *                        |
- *                        |
- *                    [ SLOT_1 ]
- *                     (Front)
- *
- *               /                   \
- *              /                     \
- *             /                       \
- *
- *      [ SLOT_3 ]                 [ SLOT_2 ]
- *     (Back Left)                (Back Right)
- *
- *
- *  Rotation Conventions:
- *  ----------------------
- *  - CW  rotation (negative direction) shoots balls:
- *        SLOT_1 → SLOT_3 → SLOT_2 → SLOT_1 → ...
- *
- *  - CCW rotation (positive direction) moves balls:
- *        SLOT_1 → SLOT_2 → SLOT_3 → SLOT_1 → ...
- *
- *  Encoder Model:
- *  --------------
- *  - Each full rotation = TICKS_PER_REV encoder ticks.
- *  - Each slot is exactly 120° apart → TICKS_PER_SLOT = TICKS_PER_REV / 3.
- *
- *  Examples:
- *      rotateBallToShooter(SLOT_3)
- *          SLOT_3 → SLOT_2 → SLOT_1 (2 CCW steps)
- *
- *      rotateBallToShooter(SLOT_2)
- *          SLOT_2 → SLOT_1 (1 CCW step)
- *
- *  ================================================================
- */
-
-
-/**
- * Spindexer driven by a motor with encoder.
- *
- * - 3 slots in a triangle (120° apart).
- * - Motor with encoder rotates the plate.
- * - 2 color sensors per slot (6 total).
- *
- * CW = shooting direction.
- * CCW = sorting/loading direction.
- */
 public class SpindexerSubsystem extends RE_SubsystemBase {
 
-    // === Hardware ===
-    private final DcMotorEx spindexerEncoder;
-    private final CRServo spindexerServo;
-    private final ColorSensor[][] slotSensors;
+    private final DcMotorEx spindexerMotor;
+    private final CameraSubsystem camera;
 
-    // === Encoder / motion tuning (TODO: tune on robot) ===
-    // TICKS_PER_SLOT = absolute encoder tick change for ONE 120° step CW.
-    private static final int TICKS_PER_REV = 1000; // TODO: tune this
-    private static final int TICKS_PER_SLOT = TICKS_PER_REV / 3;
-    private static final int POSITION_TOLERANCE_TICKS = 50;
 
-    // Motor powers (can be tuned)
-    private static final double CW_POWER  = -1;  // shooting direction
-    private static final double CCW_POWER = 1; // sorting/loading direction
-    private static final double LOAD_POWER = 1;
-    private static final double STOP_POWER = 0;
+    private final ColorSensor slot1Inner;
+    private final ColorSensor slot1Outer;
+    private final ColorSensor slot2Inner;
+    private final ColorSensor slot2Outer;
+    private final ColorSensor slot3Inner;
+    private final ColorSensor slot3Outer;
 
-    // === Enums ===
+    private static final double TICKS_PER_REVOLUTION = 1440.0;
+    private static final double SLOT_1_POSITION = 0.0; // Change Pos based on the position actaully
+    private static final double SLOT_2_POSITION = TICKS_PER_REVOLUTION / 3.0;
+    private static final double SLOT_3_POSITION = (2.0 * TICKS_PER_REVOLUTION) / 3.0;
 
-    public enum Slot {
-        SLOT_1(0),
-        SLOT_2(1),
-        SLOT_3(2);
+    private static final double POSITION_TOLERANCE = 50.0; //Prevent nasty overshoot and undershoot
+    private static final double ROTATION_POWER = 0.5;
+    private static final double SHOOT_POWER = 0.8;
 
-        public final int index;
-        Slot(int i) { this.index = i; }
-
-        public static Slot fromIndex(int idx) {
-            int i = ((idx % 3) + 3) % 3;
-            for (Slot s : values()) {
-                if (s.index == i) return s;
-            }
-            return SLOT_1;
-        }
-    }
-
-    public enum BallColor {
-        GREEN,
-        PURPLE,
-        NONE,
-        UNKNOWN
-    }
+    private static final int GREEN_HUE_MIN = 80;
+    private static final int GREEN_HUE_MAX = 160;
+    private static final int MIN_SATURATION = 100;
+    private static final int MIN_VALUE = 100;
 
     public enum SpindexerState {
         IDLE,
-        LOADING,
-        SHOOTING_CW,
-        SORTING_CCW
+        SORTING,
+        POSITIONING,
+        SHOOTING,
+        CW,
+        CCW
     }
 
-    public static class SlotInfo {
-        public final Slot slot;
-        public BallColor color;
+    private SpindexerState currentState;
+    private int targetSlot; // 1, 2, or 3
+    private double targetPosition;
 
-        public SlotInfo(Slot slot, BallColor color) {
-            this.slot = slot;
-            this.color = color;
-        }
-    }
+    public SpindexerSubsystem(HardwareMap hw, String motorName,
+                              String slot1InnerName, String slot1OuterName,
+                              String slot2InnerName, String slot2OuterName,
+                              String slot3InnerName, String slot3OuterName,
+                              CameraSubsystem camera) {
 
-    // === State ===
+        this.spindexerMotor = hw.get(DcMotorEx.class, motorName);
+        spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        spindexerMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-    private final SlotInfo[] slotInfos;
+        this.camera = camera;
 
-    private SpindexerState state;
-    private int targetPos;
+        this.slot1Inner = hw.get(ColorSensor.class, slot1InnerName);
+        this.slot1Outer = hw.get(ColorSensor.class, slot1OuterName);
+        this.slot2Inner = hw.get(ColorSensor.class, slot2InnerName);
+        this.slot2Outer = hw.get(ColorSensor.class, slot2OuterName);
+        this.slot3Inner = hw.get(ColorSensor.class, slot3InnerName);
+        this.slot3Outer = hw.get(ColorSensor.class, slot3OuterName);
 
-    public SpindexerSubsystem(HardwareMap hardwareMap,
-                              String encoderName, String servoName,
-                              String slot0SensorAName, String slot0SensorBName,
-                              String slot1SensorAName, String slot1SensorBName,
-                              String slot2SensorAName, String slot2SensorBName) {
-
-        this.spindexerEncoder = hardwareMap.get(DcMotorEx.class, encoderName);
-        this.spindexerServo = hardwareMap.get(CRServo.class, servoName);
-
-
-        // Color sensors (2 per slot)
-        slotSensors = new ColorSensor[3][2];
-        slotSensors[0][0] = hardwareMap.get(ColorSensor.class, slot0SensorAName);
-        slotSensors[0][1] = hardwareMap.get(ColorSensor.class, slot0SensorBName);
-        slotSensors[1][0] = hardwareMap.get(ColorSensor.class, slot1SensorAName);
-        slotSensors[1][1] = hardwareMap.get(ColorSensor.class, slot1SensorBName);
-        slotSensors[2][0] = hardwareMap.get(ColorSensor.class, slot2SensorAName);
-        slotSensors[2][1] = hardwareMap.get(ColorSensor.class, slot2SensorBName);
-
-        // Init slot info
-        slotInfos = new SlotInfo[3];
-        slotInfos[0] = new SlotInfo(Slot.SLOT_1, BallColor.UNKNOWN);
-        slotInfos[1] = new SlotInfo(Slot.SLOT_2, BallColor.UNKNOWN);
-        slotInfos[2] = new SlotInfo(Slot.SLOT_3, BallColor.UNKNOWN);
-
-        // Motor setup
-        spindexerEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        spindexerEncoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        state = SpindexerState.IDLE;
-        targetPos = 0;
+        currentState = SpindexerState.IDLE;
+        targetSlot = 1;
+        targetPosition = SLOT_1_POSITION;
 
         Robot.getInstance().subsystems.add(this);
     }
 
-    public SpindexerState getSpindexerState() {
-        return this.state;
-    }
 
-    public int getTargetPos() {
-        return this.targetPos;
-    }
-
-    public List<SlotInfo> getSlotInfos() {
-        return Arrays.asList(slotInfos);
-    }
-
-    public BallColor getBallColor(Slot slot) {
-        return slotInfos[slot.index].color;
-    }
-
-    public int getCurrentPos() {
-        return spindexerEncoder.getCurrentPosition();
-    }
-
-
-
-    // === High-level movement API ===
-
-    /** Advance one slot in CW direction (shooting). */
-    public void shootSingleBall() {
-        if (state != SpindexerState.IDLE) return;
-
-        state = SpindexerState.SHOOTING_CW;
-
-        // Move motor one "slot" worth of ticks CW
-        int current = getCurrentPos();
-        targetPos = current + (TICKS_PER_SLOT * (int) Math.ceil(CW_POWER));
-    }
-
-    /** Shoots all balls by rotating 1 revolution CW */
-    public void shootAllBalls() {
-        if (state != SpindexerState.IDLE) return;
-
-        state = SpindexerState.SHOOTING_CW;
-
-        // Move motor one "slot" worth of ticks CW
-        int current = getCurrentPos();
-        targetPos = current + (TICKS_PER_REV * (int) Math.ceil(CW_POWER));
-    }
-
-    /** Advance one slot in CCW direction (loading). */
-    public void loadSingleBall() {
-        if (state != SpindexerState.IDLE) return;
-
-        state = SpindexerState.LOADING;
-
-        // Move motor one "slot" worth of ticks CCW
-        int current = getCurrentPos();
-        targetPos = current + (TICKS_PER_SLOT * (int) Math.ceil(LOAD_POWER));
-    }
-
-    /**
-     * Rotate CCW (sorting direction) so that the given slot ends up
-     * at the shooting position in one continuous move (0–2 slots CCW).
-     */
-    public void rotateSlotToShoot(Slot desiredFront) {
-        assert desiredFront != null;
-
-        if (state != SpindexerState.IDLE) return;
-
-        state = SpindexerState.SORTING_CCW;
-
-        int current = getCurrentPos();
-        targetPos = current + (desiredFront.index * TICKS_PER_SLOT * (int) Math.ceil(CCW_POWER));
-    }
-
-
-    public Slot getGreenBallSlot() {
-        for (Slot slot : Slot.values()) {
-            if (getBallColor(slot) == BallColor.GREEN) return slot;
-        }
-        return null;
-    }
-
-
-
-    /** Stop motion & hold current slot. */
-    public void stop() {
-        spindexerServo.setPower(0.0);
-        state = SpindexerState.IDLE;
-        targetPos = getCurrentPos();
-    }
-
-    // === Color logic ===
-
-    private void updateSlotColors() {
-        for (Slot slot : Slot.values()) {
-            ColorSensor sensorA = slotSensors[slot.index][0];
-            ColorSensor sensorB = slotSensors[slot.index][1];
-
-            BallColor a = detectColor(sensorA);
-            BallColor b = detectColor(sensorB);
-
-            slotInfos[slot.index].color = combineColors(a, b);
+    public void setState(SpindexerState newState) {
+        if (currentState != newState) {
+            currentState = newState;
+            onStateChange(newState);
         }
     }
 
-    private BallColor detectColor(ColorSensor sensor) {
-        int r = sensor.red();
-        int g = sensor.green();
-        int b = sensor.blue();
+    public SpindexerState getState() {
+        return currentState;
+    }
 
-        int sum = r + g + b;
-        if (sum < 50) {
-            return BallColor.NONE;
+    public void startSorting() {
+        setState(SpindexerState.SORTING);
+    }
+
+    public void moveToSlot(int slot) {
+        if (slot < 1 || slot > 3) {
+            return; // Invalid slot
         }
 
-        // Placeholder logic — tune these with telemetry!
-        if (g > r && g > b) {
-            return BallColor.GREEN;
-        } else if (r > g && b > g) {
-            return BallColor.PURPLE;
-        } else {
-            return BallColor.UNKNOWN;
-        }
+        targetSlot = slot;
+        updateTargetPosition();
+        setState(SpindexerState.POSITIONING);
     }
 
-    private BallColor combineColors(BallColor a, BallColor b) {
-        if (a == b && a != BallColor.UNKNOWN) return a;
-        if (a == BallColor.NONE && (b == BallColor.GREEN || b == BallColor.PURPLE)) return b;
-        if (b == BallColor.NONE && (a == BallColor.GREEN || a == BallColor.PURPLE)) return a;
-        if (a == BallColor.NONE && b == BallColor.NONE) return BallColor.NONE;
-        return BallColor.UNKNOWN;
-    }
-
-    // === Internal helpers ===
-
-    private boolean isAtTarget() {
-        return abs(getCurrentPos() - targetPos) <= POSITION_TOLERANCE_TICKS;
-    }
-
-    private void updateServoPower() {
-        switch (state) {
-            case SHOOTING_CW:
-                spindexerServo.setPower(CW_POWER);
-                break;
-            case LOADING:
-                spindexerServo.setPower(CCW_POWER);
-                break;
-            case IDLE:
+    private int getGreenSlotFromObelisk(CameraSubsystem.Obelisk obelisk) {
+        switch (obelisk) {
+            case GPP:
+                return 1; // Green in slot 1
+            case PGP:
+                return 2; // Green in slot 2
+            case PPG:
+                return 3; // Green in slot 3
+            case PPP:
             default:
-                spindexerServo.setPower(STOP_POWER);
-                break;
+                return 0; // No green or invalid pattern
         }
     }
 
-    // === RE_SubsystemBase hooks ===
+    public CameraSubsystem.Obelisk getObeliskForCurrentSlot() {
+        switch (targetSlot) {
+            case 1:
+                return CameraSubsystem.Obelisk.GPP;
+            case 2:
+                return CameraSubsystem.Obelisk.PGP;
+            case 3:
+                return CameraSubsystem.Obelisk.PPG;
+            default:
+                return CameraSubsystem.Obelisk.PPP;
+        }
+    }
+
+    public int getTargetSlot() {
+        return targetSlot;
+    }
+
+    public void startShooting() {
+        setState(SpindexerState.SHOOTING);
+    }
+
+    public void stopShooting() {
+        setState(SpindexerState.IDLE);
+    }
+
+    public void stop() {
+        setState(SpindexerState.IDLE);
+    }
+
+    public void rotateCW() {
+        setState(SpindexerState.CW);
+    }
+
+    public void rotateCCW() {
+        setState(SpindexerState.CCW);
+    }
+
+    public void resetEncoder() {
+        spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        targetSlot = 1;
+        targetPosition = SLOT_1_POSITION;
+    }
+
+    public double getCurrentPosition() {
+        return spindexerMotor.getCurrentPosition();
+    }
+
+    public boolean isAtTarget() {
+        return Math.abs(getCurrentPosition() - targetPosition) < POSITION_TOLERANCE;
+    }
+
+
+    public boolean isSlotGreen(int slot) {
+        switch (slot) {
+            case 1:
+                return isGreen(slot1Inner) || isGreen(slot1Outer);
+            case 2:
+                return isGreen(slot2Inner) || isGreen(slot2Outer);
+            case 3:
+                return isGreen(slot3Inner) || isGreen(slot3Outer);
+            default:
+                return false;
+        }
+    }
+
+    public String getSlotColorName(int slot) {
+        if (isSlotGreen(slot)) {
+            return "GREEN";
+        } else {
+            return "PURPLE";
+        }
+    }
+
+    public boolean verifyGreenAtTarget() {
+        return isSlotGreen(targetSlot);
+    }
+
 
     @Override
     public void updateData() {
-        // Robot.getInstance().data.spindexerState      = state;
-        // Robot.getInstance().data.spindexerTargetPos  = targetPos;
-        // Robot.getInstance().data.spindexerCurrentPos = getCurrentPos();
+        // Update robot data for telemetry (uncomment and adjust as needed)
+        // Robot.getInstance().data.spindexerState = currentState.name();
+        // Robot.getInstance().data.spindexerSlot = targetSlot;
+        // Robot.getInstance().data.spindexerPosition = getCurrentPosition();
+        // Robot.getInstance().data.spindexerAtTarget = isAtTarget();
     }
 
     @Override
     public void periodic() {
-        // Drive servo based on current state
-        updateServoPower();
+        switch (currentState) {
+            case IDLE:
+                handleIdleState();
+                break;
 
-        // Check if we've reached the target encoder position
-        if (state != SpindexerState.IDLE) {
-            if (isAtTarget()) {
-                stop(); // sets state = IDLE and stops servo
-            }
+            case SORTING:
+                handleSortingState();
+                break;
+
+            case POSITIONING:
+                handlePositioningState();
+                break;
+
+            case SHOOTING:
+                handleShootingState();
+                break;
+
+            case CW:
+                handleCWState();
+                break;
+
+            case CCW:
+                handleCCWState();
+                break;
         }
-
-        // Continuously update colors
-        updateSlotColors();
     }
 
 
+    private void handleIdleState() {
+        spindexerMotor.setPower(0.0);
+    }
+
+    private void handleSortingState() {
+        CameraSubsystem.Obelisk obelisk = camera.getObelisk();
+
+        if (obelisk == null || obelisk == CameraSubsystem.Obelisk.PPP) {
+            // No pattern found. Never will happen but just in case
+            spindexerMotor.setPower(0.0);
+        } else {
+
+            int greenSlot = getGreenSlotFromObelisk(obelisk);
+
+            if (greenSlot > 0) {
+                targetSlot = greenSlot;
+                updateTargetPosition();
+                setState(SpindexerState.POSITIONING);
+            } else {
+                spindexerMotor.setPower(0.0);
+            }
+        }
+    }
+
+    private void handlePositioningState() {
+        if (isAtTarget()) {
+            setState(SpindexerState.IDLE);
+        } else {
+            // Determine shortest path to target
+            double error = targetPosition - getCurrentPosition();
+            double direction = Math.signum(error);
+            spindexerMotor.setPower(direction * ROTATION_POWER);
+        }
+    }
+
+    private void handleShootingState() {
+        spindexerMotor.setPower(SHOOT_POWER);
+    }
+
+    private void handleCWState() {
+        spindexerMotor.setPower(ROTATION_POWER);
+    }
+
+    private void handleCCWState() {
+        spindexerMotor.setPower(-ROTATION_POWER);
+    }
+
+
+    private void onStateChange(SpindexerState newState) {
+        if (newState == SpindexerState.IDLE) {
+            spindexerMotor.setPower(0.0);
+        }
+    }
+
+    private void updateTargetPosition() {
+        switch (targetSlot) {
+            case 1:
+                targetPosition = SLOT_1_POSITION;
+                break;
+            case 2:
+                targetPosition = SLOT_2_POSITION;
+                break;
+            case 3:
+                targetPosition = SLOT_3_POSITION;
+                break;
+        }
+    }
+
+    private boolean isGreen(ColorSensor sensor) {
+        int red = sensor.red();
+        int green = sensor.green();
+        int blue = sensor.blue();
+
+        // Convert RGB to HSV for better color detection
+        float[] hsv = new float[3];
+        android.graphics.Color.RGBToHSV(red, green, blue, hsv);
+
+        float hue = hsv[0];
+        float saturation = hsv[1] * 255;
+        float value = hsv[2] * 255;
+
+        // Check if color is within green range
+        return (hue >= GREEN_HUE_MIN && hue <= GREEN_HUE_MAX) &&
+                (saturation >= MIN_SATURATION) &&
+                (value >= MIN_VALUE);
+    }
 }
