@@ -273,17 +273,29 @@ public class SpindexerSubsystem extends RE_SubsystemBase {
     }
 
     private void handleCWState() {
-        spindexerMotor.setPower(ROTATION_POWER);
+        if (!cwInitialized) {
+            targetSlot++;
+            if (targetSlot > 3) targetSlot = 1;
+
+            updateTargetPosition();
+            cwInitialized = true;
+        }
+
+        setState(SpindexerState.POSITIONING);
     }
 
     private void handleCCWState() {
         spindexerMotor.setPower(-ROTATION_POWER);
     }
 
+    private boolean cwInitialized = false;
 
     private void onStateChange(SpindexerState newState) {
         if (newState == SpindexerState.IDLE) {
             spindexerMotor.setPower(0.0);
+        }
+        if (newState != SpindexerState.CW) {
+            cwInitialized = false;
         }
     }
 
