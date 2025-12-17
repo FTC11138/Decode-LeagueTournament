@@ -64,7 +64,8 @@ public class Robot {
 
         turretSubsystem = new TurretSubsystem(
                 this.hardwareMap,
-                names.turretMotor,
+                names.turretServo,
+                names.turretEncoder,
                 cameraSubsystem
         );
 

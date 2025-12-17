@@ -12,7 +12,7 @@ public class Configuration {
 
     //Util
 
-    public final String turretMotor = "turretMotor";
+    public final String turretServo = "turretServo";
 
     public final String shootMotor1 = "shootMotor1";
     public final String shootMotor2 = "shootMotor2";
@@ -22,6 +22,8 @@ public class Configuration {
     public final String spindexerServo = "spindexerServo";
 
     public final String spindexerMotor = "spindexerMotor";
+
+    public final String turretEncoder = "turretEncoder";
 
     public final String slot0SensorA = "slot0SensorA";
 
