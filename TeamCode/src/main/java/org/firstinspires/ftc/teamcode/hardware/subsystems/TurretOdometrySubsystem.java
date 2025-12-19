@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode.hardware.subsystems;
 
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+
 import static org.firstinspires.ftc.teamcode.util.Globals.ALLIANCE;
 
 import com.pedropathing.follower.Follower;
@@ -14,18 +16,21 @@ import org.firstinspires.ftc.teamcode.util.Globals;
 import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;
 
 public class TurretOdometrySubsystem extends RE_SubsystemBase {
-    
-    private final DcMotorEx turretMotor;
+
+    // ACTUATOR: continuous rotation servo
+    private final CRServo turretServo;
+
+    // SENSOR: external encoder plugged into a motor encoder port
+    private final DcMotorEx turretEncoder;
+
     private final Follower follower;
 
     private double targetX;
     private double targetY;
 
-
-    //Offset from center of crobot
-    private final double turretOffsetX = 0; // change when we find out
+    // Offset from center of robot (in field units you’re using)
+    private final double turretOffsetX = 0;
     private final double turretOffsetY = 0;
-
 
     private double integral = 0.0;
     private double lastErrDeg = 0.0;
@@ -42,32 +47,29 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     private static final double MIN_DT = 1e-3;  // 1 ms
     private static final double MAX_DT = 0.05;  // 50 ms
 
-
+    // Encoder math (make sure ticksPerRev matches YOUR encoder CPR after quadrature)
     private static final double ticksPerRev = 751.8;
     private static final double gearRatio = 108.0 / 258.0;
     private static final double ticksPerDeg = (ticksPerRev * gearRatio) / 360.0;
 
+    private static final double leftlim = 0;
+    private static final double rightlim = 355;
 
-    private static final double leftlim = -90.0;
-    private static final double rightlim = 90.0;
-
-    public TurretOdometrySubsystem(HardwareMap hw, String motorName, Follower follower) {
-        this.turretMotor = hw.get(DcMotorEx.class, motorName);
+    public TurretOdometrySubsystem(HardwareMap hw, String servoName, String encoderName, Follower follower) {
+        this.turretServo = hw.get(CRServo.class, servoName);
+        this.turretEncoder = hw.get(DcMotorEx.class, encoderName);
         this.follower = follower;
 
-
-        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        turretEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         turretState = TurretState.MANUAL;
         setTurretPower(0.0);
 
-        if(ALLIANCE == Globals.COLORS.BLUE){
+        if (ALLIANCE == Globals.COLORS.BLUE) {
             targetX = 16.5;
             targetY = 131;
-        }
-        else if(ALLIANCE == Globals.COLORS.RED){
+        } else if (ALLIANCE == Globals.COLORS.RED) {
             targetX = 144 - 16.5;
             targetY = 131;
         }
@@ -89,6 +91,17 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         return turretState;
     }
 
+    public void setTargetPoint(double x, double y) {
+        this.targetX = x;
+        this.targetY = y;
+    }
+
+    public void zeroTurretEncoder() {
+        turretEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        resetPID();
+    }
+
     public void setTurretPower(double pwr) {
         double angleDeg = getTurretAngleDeg();
 
@@ -98,24 +111,19 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
             pwr = 0;
         }
 
-        turretMotor.setPower(clamp(pwr, -1.0, 1.0));
+        turretServo.setPower(clamp(pwr, -1.0, 1.0));
     }
 
     public double getTurretAngleDeg() {
-        return turretMotor.getCurrentPosition() / ticksPerDeg;
-    }
-
-    public void setTargetPoint(double x, double y) {
-        this.targetX = x;
-        this.targetY = y;
+        return turretEncoder.getCurrentPosition() / ticksPerDeg;
     }
 
     @Override
     public void updateData() {
-//        Robot.getInstance().data.turretState = turretState.name();
-//        Robot.getInstance().data.turretAngleDeg = getTurretAngleDeg();
-//        Robot.getInstance().data.turretTargetX = targetX;
-//        Robot.getInstance().data.turretTargetY = targetY;
+        // Robot.getInstance().data.turretState = turretState.name();
+        // Robot.getInstance().data.turretAngleDeg = getTurretAngleDeg();
+        // Robot.getInstance().data.turretTargetX = targetX;
+        // Robot.getInstance().data.turretTargetY = targetY;
     }
 
     @Override
@@ -124,7 +132,6 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
             runTrackPointPID();
         }
     }
-
 
     private void runTrackPointPID() {
         long now = System.nanoTime();
@@ -147,32 +154,25 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         double robotY = pose.getY();
         double heading = pose.getHeading();
 
-        // Turret position in field coords: robot pose + rotated offset
         double cosH = Math.cos(heading);
         double sinH = Math.sin(heading);
 
         double turretX = robotX + turretOffsetX * cosH - turretOffsetY * sinH;
         double turretY = robotY + turretOffsetX * sinH + turretOffsetY * cosH;
 
-        // Angle from turret to target in field frame
         double angleToTargetField = Math.atan2(targetY - turretY, targetX - turretX);
 
-        // Desired turret angle relative to robot forward
         double desiredTurretAngleDeg = Math.toDegrees(angleToTargetField - heading);
         desiredTurretAngleDeg = wrapTo180(desiredTurretAngleDeg);
 
-        // Current turret angle
         double currentTurretAngleDeg = getTurretAngleDeg();
-
         double errDeg = wrapTo180(desiredTurretAngleDeg - currentTurretAngleDeg);
-
 
         if (Math.abs(errDeg) < Constants.deadbandDeg) {
             errDeg = 0.0;
         }
 
         errFiltDeg = Constants.errAlpha * errDeg + (1.0 - Constants.errAlpha) * errFiltDeg;
-
 
         integral += errFiltDeg * dt;
         if (errDeg == 0.0) integral *= 0.5;
@@ -181,7 +181,6 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         double deriv = (errFiltDeg - lastErrDeg) / dt;
         deriv = clamp(deriv, -Constants.maxDeriv, Constants.maxDeriv);
         lastErrDeg = errFiltDeg;
-
 
         double rawPower =
                 Constants.kP_v * errFiltDeg +

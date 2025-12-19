@@ -36,6 +36,8 @@ public class Robot {
 
     public TurretSubsystem turretSubsystem;
 
+    public TurretOdometrySubsystem turretOdometrySubsystem;
+
     public ShooterSubsystem shooterSubsystem;
 
     public IntakeSubsystem intakeSubsystem;
@@ -62,11 +64,11 @@ public class Robot {
                 names.limelight
         );
 
-        turretSubsystem = new TurretSubsystem(
+        turretOdometrySubsystem = new TurretOdometrySubsystem(
                 this.hardwareMap,
                 names.turretServo,
                 names.turretEncoder,
-                cameraSubsystem
+                follower
         );
 
         shooterSubsystem = new ShooterSubsystem(
