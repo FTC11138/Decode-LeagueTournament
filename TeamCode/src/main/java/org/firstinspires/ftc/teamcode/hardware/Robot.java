@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.hardware.subsystems.CameraSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.SpindexerSubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.SpindexerTestSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.pedroPathing.PedroPathingConstants;
@@ -36,7 +37,9 @@ public class Robot {
 
     public TurretSubsystem turretSubsystem;
 
-    public TurretOdometrySubsystem turretOdometrySubsystem;
+    public SpindexerTestSubsystem spindexerTestSubsystem;
+
+//    public TurretOdometrySubsystem turretOdometrySubsystem;
 
     public ShooterSubsystem shooterSubsystem;
 
@@ -59,17 +62,19 @@ public class Robot {
 
         if (!Globals.IS_AUTO) follower.startTeleopDrive();
 
-        cameraSubsystem = new CameraSubsystem(
-                this.hardwareMap,
-                names.limelight
-        );
+//        cameraSubsystem = new CameraSubsystem(
+//                this.hardwareMap,
+//                names.limelight
+//        );
 
-        turretOdometrySubsystem = new TurretOdometrySubsystem(
-                this.hardwareMap,
-                names.turretServo,
-                names.turretEncoder,
-                follower
-        );
+//        turretOdometrySubsystem = new TurretOdometrySubsystem(
+//                this.hardwareMap,
+//                names.turretServo,
+//                names.turretEncoder,
+//                follower
+//        );
+
+        subsystems = new ArrayList<>();
 
         shooterSubsystem = new ShooterSubsystem(
                 this.hardwareMap,
@@ -82,21 +87,26 @@ public class Robot {
                 names.intakeMotor
         );
 
-        spindexerSubsystem = new SpindexerSubsystem(
+//        spindexerSubsystem = new SpindexerSubsystem(
+//                this.hardwareMap,
+//                names.spindexerMotor,
+//                names.slot0SensorA,
+//                names.slot0SensorB,
+//                names.slot1SensorA,
+//                names.slot1SensorB,
+//                names.slot2SensorA,
+//                names.slot2SensorB,
+//                cameraSubsystem
+//        );
+
+        spindexerTestSubsystem = new SpindexerTestSubsystem(
                 this.hardwareMap,
-                names.spindexerMotor,
-                names.slot0SensorA,
-                names.slot0SensorB,
-                names.slot1SensorA,
-                names.slot1SensorB,
-                names.slot2SensorA,
-                names.slot2SensorB,
-                cameraSubsystem
+                names.spindexerMotor
         );
 
 
 
-        subsystems = new ArrayList<>();
+
 
     }
 

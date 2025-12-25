@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;
 
 public class ShooterSubsystem extends RE_SubsystemBase {
 
-    private final DcMotorEx shooterMotor1; 
+    private final DcMotorEx shooterMotor1;
     private final DcMotorEx shooterMotor2;
 
     public enum ShooterState {
@@ -44,14 +44,20 @@ public class ShooterSubsystem extends RE_SubsystemBase {
         Robot.getInstance().subsystems.add(this);
     }
 
+    @Override
+    public void updateData() {
+//        Robot.getInstance().data.shooterState = shooterState;
+    }
+
     private void initMotor(DcMotorEx motor) {
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor.setPIDFCoefficients(
-                DcMotor.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(Constants.kP, Constants.kI, Constants.kD, Constants.kF)
-        );
+        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        motor.setPIDFCoefficients(
+//                DcMotor.RunMode.RUN_USING_ENCODER,
+//                new PIDFCoefficients(Constants.kP, Constants.kI, Constants.kD, Constants.kF)
+//        );
     }
 
     public void updateShooterState(ShooterState newState) {
@@ -69,13 +75,11 @@ public class ShooterSubsystem extends RE_SubsystemBase {
                 break;
 
             case SHOOT:
-                targetVelocity = Constants.shootPower * maxTicksPerSecond;
-                shooterMotor1.setVelocity(targetVelocity);
-                shooterMotor2.setVelocity(targetVelocity);
+                shooterMotor1.setPower(-1);
+                shooterMotor2.setPower(-1);
                 break;
 
             case STOP:
-                targetVelocity = 0.0;
                 shooterMotor1.setPower(0.0);
                 shooterMotor2.setPower(0.0);
                 break;
