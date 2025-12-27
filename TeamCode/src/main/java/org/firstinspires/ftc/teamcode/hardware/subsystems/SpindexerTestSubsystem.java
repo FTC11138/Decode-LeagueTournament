@@ -15,7 +15,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
     // ===== Constants =====
     private static final double TICKS_PER_REVOLUTION = 537.7; // adjust if needed
     private static final double TICKS_120_DEG = TICKS_PER_REVOLUTION / 3.0;
-    private static final double MOVE_POWER = 0.2;
+    private static final double MOVE_POWER = 0.4;
 
     public SpindexerTestSubsystem(HardwareMap hw, String motorName) {
         spindexerMotor = hw.get(DcMotorEx.class, motorName);
