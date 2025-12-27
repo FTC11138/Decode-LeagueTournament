@@ -17,10 +17,8 @@ import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;
 
 public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
-    // ACTUATOR: continuous rotation servo
     private final CRServo turretServo;
 
-    // SENSOR: external encoder plugged into a motor encoder port
     private final DcMotorEx turretEncoder;
 
     private final Follower follower;
@@ -28,7 +26,6 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     private double targetX;
     private double targetY;
 
-    // Offset from center of robot (in field units you’re using)
     private final double turretOffsetX = 0;
     private final double turretOffsetY = 0;
 
@@ -44,16 +41,15 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
     private TurretState turretState;
 
-    private static final double MIN_DT = 1e-3;  // 1 ms
-    private static final double MAX_DT = 0.05;  // 50 ms
+    private static final double MIN_DT = 1e-3;
+    private static final double MAX_DT = 0.05;
 
-    // Encoder math (make sure ticksPerRev matches YOUR encoder CPR after quadrature)
     private static final double ticksPerRev = 751.8;
     private static final double gearRatio = 108.0 / 258.0;
     private static final double ticksPerDeg = (ticksPerRev * gearRatio) / 360.0;
 
-    private static final double leftlim = 0;
-    private static final double rightlim = 355;
+    private static final double leftlim = -180;
+    private static final double rightlim = 180;
 
     public TurretOdometrySubsystem(HardwareMap hw, String servoName, String encoderName, Follower follower) {
         this.turretServo = hw.get(CRServo.class, servoName);
@@ -166,7 +162,7 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         desiredTurretAngleDeg = wrapTo180(desiredTurretAngleDeg);
 
         double currentTurretAngleDeg = getTurretAngleDeg();
-        double errDeg = wrapTo180(desiredTurretAngleDeg - currentTurretAngleDeg);
+        double errDeg = calculateSmartError(desiredTurretAngleDeg, currentTurretAngleDeg);
 
         if (Math.abs(errDeg) < Constants.deadbandDeg) {
             errDeg = 0.0;
@@ -199,6 +195,29 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         }
 
         setTurretPower(power);
+    }
+
+    private double calculateSmartError(double desired, double current) {
+        // calculate both possible paths
+        double shortError = wrapTo180(desired - current);
+        double longError = shortError > 0 ? shortError - 360.0 : shortError + 360.0;
+
+        // check if short path would violate limits
+        double shortPathMax = current;
+        double shortPathMin = current;
+
+        if (shortError > 0) {
+            shortPathMax = current + shortError;
+        } else {
+            shortPathMin = current + shortError;
+        }
+
+        // if short pat goes outside limit use long path
+        if (shortPathMax > rightlim || shortPathMin < leftlim) {
+            return longError;
+        }
+
+        return shortError;
     }
 
     private void resetPID() {
