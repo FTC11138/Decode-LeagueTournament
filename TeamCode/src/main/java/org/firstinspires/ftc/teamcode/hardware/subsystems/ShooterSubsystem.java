@@ -22,11 +22,15 @@ public class ShooterSubsystem extends RE_SubsystemBase {
 
     public ShooterState shooterState;
 
-    private double ticksPerRev;
     private static final double MAX_RPM = 6000.0;
-    private double maxTicksPerSecond;
+    private static final double TICKS_PER_REV = 28;
+    private static final double MAX_TICKS_PER_SECOND = (TICKS_PER_REV * MAX_RPM) / 60.0;
 
     private double targetVelocity = 0;
+    private double currentVelocity1 = 0;
+    private double currentVelocity2 = 0;
+    private double currentRPM1 = 0;
+    private double currentRPM2 = 0;
 
     public ShooterSubsystem(HardwareMap hardwareMap, String motorName1, String motorName2) {
 
@@ -36,9 +40,6 @@ public class ShooterSubsystem extends RE_SubsystemBase {
         initMotor(shooterMotor1);
         initMotor(shooterMotor2);
 
-        ticksPerRev = shooterMotor1.getMotorType().getTicksPerRev();
-        maxTicksPerSecond = (ticksPerRev * MAX_RPM) / 60.0;
-
         shooterState = ShooterState.STOP;
 
         Robot.getInstance().subsystems.add(this);
@@ -46,7 +47,14 @@ public class ShooterSubsystem extends RE_SubsystemBase {
 
     @Override
     public void updateData() {
-//        Robot.getInstance().data.shooterState = shooterState;
+        Robot robot = Robot.getInstance();
+
+        robot.data.shooterState = shooterState;
+        robot.data.shooterTargetVelocity = targetVelocity;
+        robot.data.shooterCurrentVelocity1 = currentVelocity1;
+        robot.data.shooterCurrentVelocity2 = currentVelocity2;
+        robot.data.shooterCurrentRPM1 = currentRPM1;
+        robot.data.shooterCurrentRPM2 = currentRPM2;
     }
 
     private void initMotor(DcMotorEx motor) {
@@ -69,7 +77,7 @@ public class ShooterSubsystem extends RE_SubsystemBase {
 
         switch (shooterState) {
             case LOWERPOWER:
-                targetVelocity = Constants.lowerShootPower * maxTicksPerSecond;
+                targetVelocity = Constants.lowerShootPower * MAX_TICKS_PER_SECOND;
                 shooterMotor1.setVelocity(targetVelocity);
                 shooterMotor2.setVelocity(targetVelocity);
                 break;
@@ -84,14 +92,27 @@ public class ShooterSubsystem extends RE_SubsystemBase {
                 shooterMotor2.setPower(0.0);
                 break;
         }
+
+        currentVelocity1 = shooterMotor1.getVelocity();
+        currentVelocity1 = shooterMotor2.getVelocity();
+        currentRPM1 = (currentVelocity1 / TICKS_PER_REV) * 60.0;
+        currentRPM2 = (currentVelocity2 / TICKS_PER_REV) * 60.0;
     }
 
-    public double getCurrentVelocity() {
-        return shooterMotor1.getVelocity();
+    public double getCurrentVelocity1() {
+        return currentVelocity1;
     }
 
-    public double getCurrentRPM() {
-        return (shooterMotor1.getVelocity() / ticksPerRev) * 60.0;
+    public double getCurrentVelocity2() {
+        return currentVelocity2;
+    }
+
+    public double getCurrentRPM1() {
+        return currentRPM1;
+    }
+
+    public double getCurrentRPM2() {
+        return currentRPM2;
     }
 
     public double getTargetVelocity() {

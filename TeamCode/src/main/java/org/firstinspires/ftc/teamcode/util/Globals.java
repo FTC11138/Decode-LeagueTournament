@@ -10,6 +10,8 @@ public class Globals {
 
     public static boolean IS_AUTO = false;
 
+    public static boolean AUTO_SPINDEX = true;
+
     public static COLORS ALLIANCE = COLORS.BLUE;
 
     public enum COLORS {
