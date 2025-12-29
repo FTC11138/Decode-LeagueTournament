@@ -39,6 +39,8 @@ public class Configuration {
 
     public final String slot2SensorB = "slot2SensorB";
 
+    public final String ranger = "ranger";
+
 
     // Servos
 

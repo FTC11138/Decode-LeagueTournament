@@ -30,7 +30,7 @@ public class IntakeSubsystem extends RE_SubsystemBase {
 
     @Override
     public void updateData() {
-//        Robot.getInstance().data.intakeState = intakeState;
+        Robot.getInstance().data.intakeState = intakeState;
     }
 
     public void updateIntakeState(IntakeState state) {
