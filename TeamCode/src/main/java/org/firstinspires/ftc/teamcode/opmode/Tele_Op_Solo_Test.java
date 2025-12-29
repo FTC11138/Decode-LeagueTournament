@@ -39,6 +39,7 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
     private boolean lastRightTrigger;
     private boolean lastX;
     private boolean lastStart;
+    public boolean lastBallDetected;
 
     @Override
     public void initialize() {
@@ -59,7 +60,7 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
         );
 
         g1.getGamepadButton(GamepadKeys.Button.B).whenPressed(
-                new InstantCommand(() -> robot.spindexerTestSubsystem.rotate360CCW())
+                new InstantCommand(() -> robot.spindexerTestSubsystem.rotate120CW())
         );
 
         // Shooter control
@@ -142,10 +143,19 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
         lastLeftTrigger = leftTrigger;
         lastRightTrigger = rightTrigger;
 
+        double voltage = robot.spindexerTestSubsystem.getRangerVoltage();
+        boolean ballDetected = voltage <= Constants.ballDetectThreshold;
+
+        scheduleCommand(ballDetected, lastBallDetected, new WaitCommand(Constants.ballDetectWait).andThen(new InstantCommand(() -> robot.spindexerTestSubsystem.rotate120CCW())));
+
+        lastBallDetected = ballDetected;
+
+
+
         // Touchpad: reset pose
         if (gamepad1.touchpad) {
             robot.follower.setPose(new Pose());
-            gamepad1.rumble(500);
+            gamepad1.rumble(200);
             gamepad1.setLedColor(0, 1, 0, 1000);
         }
 
@@ -156,6 +166,7 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
         telemetry.addData("Spindexer Target", robot.spindexerTestSubsystem.getTargetPosition());
         telemetry.addData("Spindexer Moving", robot.spindexerTestSubsystem.isMoving());
         telemetry.update();
+        telemetry.addData("Ranger Voltage: ", robot.spindexerTestSubsystem.getRangerVoltage());
     }
 
 
