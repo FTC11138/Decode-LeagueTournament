@@ -101,7 +101,8 @@ public class Robot {
 
         spindexerTestSubsystem = new SpindexerTestSubsystem(
                 this.hardwareMap,
-                names.spindexerMotor
+                names.spindexerMotor,
+                "ranger"
         );
 
 

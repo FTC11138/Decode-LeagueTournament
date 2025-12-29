@@ -32,7 +32,7 @@ public class Constants {
 
     /* -------------------------------------------- SHOOT CONSTANTS -------------------------------------------- */
 
-    public static double shootPower = 0.5;
+    public static double shootPower = -1;
     public static double readyPower = -1.0;
     public static double reverseStopPower = 1;
     public static double lowerShootPower = 0.7;
@@ -40,7 +40,14 @@ public class Constants {
     public static double kP = 0.0004; // to make response faster
     public static double kI = 0.00005; // for undershoot
     public static double kD = 0.0; // don't change
-    public static double kF = 32767 / ((1440 * 6000) / 60.0); // default must tune
+    public static double kF = 32767 / ((1440 * 6000) / 60.0);
+
+    public static double spindexerRotatePower = 0.5;
+
+    public static double ballDetectThreshold = 3.5;
+    public static int ballDetectWait = 100;
+
+    // default must tune
 
 
     /* -------------------------------------------- TURRET CONSTANTS -------------------------------------------- */

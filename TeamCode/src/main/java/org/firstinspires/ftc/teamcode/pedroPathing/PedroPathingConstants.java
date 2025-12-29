@@ -70,9 +70,9 @@ public class PedroPathingConstants {
             .rightFrontMotorName(config.rightFront)
             .rightRearMotorName(config.rightRear)
             .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
+            .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .xVelocity(78.261926752421046666666666666667)
             .yVelocity(61.494551922189565)
             .useBrakeModeInTeleOp(true);
