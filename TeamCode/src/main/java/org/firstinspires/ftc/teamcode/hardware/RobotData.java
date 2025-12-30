@@ -19,7 +19,7 @@ public class RobotData {
     public int spindexerCurrentPosition = 0;
     public int spindexerTargetPosition = 0;
     public boolean spindexerMoving = false;
-    public double intakeRangerDistance = 0;
+    public boolean intakeRangerCanTurn = false;
     public int ballCount = 0;
     public double TICKS_PER_REVOLUTION = 0;
     public double TICKS_120_DEG = 0;
@@ -58,7 +58,7 @@ public class RobotData {
         telemetry.addData("Spindexer Target Pos", spindexerTargetPosition);
         telemetry.addData("Spindexer Moving", spindexerMoving);
         telemetry.addLine("");
-        telemetry.addData("Intake Ranger Distance", intakeRangerDistance);
+        telemetry.addData("Intake Ranger Can Turn", intakeRangerCanTurn);
         telemetry.addData("Ball Count", ballCount);
         telemetry.addLine("");
         telemetry.addData("Ticks / Revolution", TICKS_PER_REVOLUTION);

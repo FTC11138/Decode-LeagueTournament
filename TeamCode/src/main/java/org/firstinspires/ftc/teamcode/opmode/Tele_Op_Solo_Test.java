@@ -24,6 +24,8 @@ import org.firstinspires.ftc.teamcode.hardware.subsystems.SpindexerTestSubsystem
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
 
+import kotlin.time.Instant;
+
 @TeleOp(name = "SoloTestReal")
 public class Tele_Op_Solo_Test extends CommandOpMode {
 
