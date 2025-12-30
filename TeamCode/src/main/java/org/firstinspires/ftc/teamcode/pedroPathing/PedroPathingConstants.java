@@ -37,10 +37,10 @@ public class PedroPathingConstants {
                     0
             ))
             .headingPIDFCoefficients(new PIDFCoefficients(
-                    0.8,
+                    1.6,
                     0,
                     0.06    ,
-                    0.02
+                    0.05
             ))
             .secondaryHeadingPIDFCoefficients(new PIDFCoefficients(
                     0.8,
@@ -49,7 +49,7 @@ public class PedroPathingConstants {
                     0.02
             ))
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(
-                    0.01,
+                    0.02,
                     0,
                     0.000001,
                     0.6,
@@ -80,10 +80,10 @@ public class PedroPathingConstants {
     public static PinpointConstants localizerConstants = new PinpointConstants()
             .forwardPodY(-36.65/25.4)
             .strafePodX(-30.292/25.4)
-            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
+            .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
+            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
             .distanceUnit(DistanceUnit.INCH)
-            .hardwareMapName("pinpoint")
+            .hardwareMapName(config.odo)
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
 
     /**

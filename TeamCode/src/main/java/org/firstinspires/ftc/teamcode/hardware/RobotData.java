@@ -19,7 +19,7 @@ public class RobotData {
     public int spindexerCurrentPosition = 0;
     public int spindexerTargetPosition = 0;
     public boolean spindexerMoving = false;
-    public boolean intakeRangerCanTurn = false;
+    public double intakeRangerCanTurn = 0;
     public int ballCount = 0;
     public double TICKS_PER_REVOLUTION = 0;
     public double TICKS_120_DEG = 0;
