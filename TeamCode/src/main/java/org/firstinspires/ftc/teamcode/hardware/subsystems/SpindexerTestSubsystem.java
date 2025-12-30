@@ -3,11 +3,14 @@ package org.firstinspires.ftc.teamcode.hardware.subsystems;
 import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.command.WaitCommand;
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.commands.advanced.ArtifactEjectCommand;
 import org.firstinspires.ftc.teamcode.commands.advanced.AutoLoadBallCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.IntakeStateCommand;
@@ -22,7 +25,9 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
     private final DcMotorEx spindexerMotor;
     private int targetPosition = 0;
 
-    private final DigitalChannel ranger;
+    private double distance = 0;
+
+    private final ColorRangeSensor ranger;
     private boolean canRotate = false;
     private boolean lastBallDetected;
     private boolean ballDetected;
@@ -36,7 +41,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
     public SpindexerTestSubsystem(HardwareMap hw, String motorName, String rangerName) {
         spindexerMotor = hw.get(DcMotorEx.class, motorName);
 
-        ranger = hw.get(DigitalChannel.class, rangerName);
+        ranger = hw.get(ColorRangeSensor.class, rangerName);
 
         spindexerMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -108,7 +113,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         robot.data.spindexerTargetPosition = targetPosition;
         robot.data.spindexerMoving = isMoving();
 
-        robot.data.intakeRangerCanTurn = canRotate;
+        robot.data.intakeRangerCanTurn = distance;
         robot.data.ballCount = ballCount;
 
         robot.data.TICKS_PER_REVOLUTION = TICKS_PER_REVOLUTION;
@@ -118,9 +123,9 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
     @Override
     public void periodic() {
-        canRotate = ranger.getState();
+        distance = ranger.getDistance(DistanceUnit.MM);
 
-        ballDetected = canRotate;
+        ballDetected = distance <55    ;
 
         if (ballDetected && !lastBallDetected && Globals.AUTO_SPINDEX) {
             if (ballCount >= 3) {
