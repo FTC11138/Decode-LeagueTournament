@@ -10,8 +10,8 @@ public class ArtifactEjectCommand extends SequentialCommandGroup {
     public ArtifactEjectCommand() {
         super(
                 new IntakeStateCommand(IntakeSubsystem.IntakeState.OUT),
-                new WaitCommand(500),
-                new IntakeStateCommand(IntakeSubsystem.IntakeState.IN)
+                new WaitCommand(200),
+                new IntakeStateCommand(IntakeSubsystem.IntakeState.STOP)
         );
     }
 }

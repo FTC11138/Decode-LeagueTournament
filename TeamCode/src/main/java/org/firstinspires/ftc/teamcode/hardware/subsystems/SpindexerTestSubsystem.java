@@ -5,6 +5,7 @@ import com.arcrobotics.ftclib.command.WaitCommand;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.commands.advanced.ArtifactEjectCommand;
@@ -21,11 +22,11 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
     private final DcMotorEx spindexerMotor;
     private int targetPosition = 0;
 
-    private final AnalogInput ranger;
-    private double distance = 0;
+    private final DigitalChannel ranger;
+    private boolean canRotate = false;
     private boolean lastBallDetected;
     private boolean ballDetected;
-    private int ballCount = 0;
+    private int ballCount = -1;
 
     // ===== Constants =====
     private static final double TICKS_PER_REVOLUTION = 537.7; // adjust if needed
@@ -35,7 +36,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
     public SpindexerTestSubsystem(HardwareMap hw, String motorName, String rangerName) {
         spindexerMotor = hw.get(DcMotorEx.class, motorName);
 
-        ranger = hw.get(AnalogInput.class, rangerName);
+        ranger = hw.get(DigitalChannel.class, rangerName);
 
         spindexerMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -48,6 +49,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
     public void rotate360CW() {
         moveRelative(-TICKS_PER_REVOLUTION);
+        this.ballCount = 0;
     }
 
     public void rotate360CCW() {
@@ -56,6 +58,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
     public void rotate120CW() {
         moveRelative(-TICKS_120_DEG);
+        this.ballCount --;
     }
 
     public void rotate120CCW() {
@@ -78,9 +81,9 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         return targetPosition;
     }
 
-    public double getDistance() {
-        return distance;
-    }
+//    public double getDistance() {
+//        return distance;
+//    }
 
     public int getBallCount() {
         return ballCount;
@@ -105,7 +108,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         robot.data.spindexerTargetPosition = targetPosition;
         robot.data.spindexerMoving = isMoving();
 
-        robot.data.intakeRangerDistance = distance;
+        robot.data.intakeRangerCanTurn = canRotate;
         robot.data.ballCount = ballCount;
 
         robot.data.TICKS_PER_REVOLUTION = TICKS_PER_REVOLUTION;
@@ -115,9 +118,9 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
     @Override
     public void periodic() {
-        distance = ranger.getVoltage();
+        canRotate = ranger.getState();
 
-        ballDetected = distance < Constants.ballDetectThreshold;
+        ballDetected = canRotate;
 
         if (ballDetected && !lastBallDetected && Globals.AUTO_SPINDEX) {
             if (ballCount >= 3) {
