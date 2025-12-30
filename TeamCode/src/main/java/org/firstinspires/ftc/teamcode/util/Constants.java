@@ -31,7 +31,7 @@ public class Constants {
     public static double intakeOutPower = 1;
 
     public static double ballDetectThreshold = 0.3;
-    public static int ballDetectWait = 450;
+    public static int ballDetectWait = 200;
 
     /* -------------------------------------------- SHOOT CONSTANTS -------------------------------------------- */
 

@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.commands.advanced.ArtifactEjectCommand;
@@ -27,11 +28,12 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
     private double distance = 0;
 
-    private final ColorRangeSensor ranger;
+    private final DigitalChannel ranger;
     private boolean canRotate = false;
     private boolean lastBallDetected;
     private boolean ballDetected;
-    private int ballCount = -1;
+    private int ballCount = 0;
+    private boolean ignoreSensor = false;
 
     // ===== Constants =====
     private static final double TICKS_PER_REVOLUTION = 537.7; // adjust if needed
@@ -41,7 +43,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
     public SpindexerTestSubsystem(HardwareMap hw, String motorName, String rangerName) {
         spindexerMotor = hw.get(DcMotorEx.class, motorName);
 
-        ranger = hw.get(ColorRangeSensor.class, rangerName);
+        ranger = hw.get(DigitalChannel.class, rangerName);
 
         spindexerMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -113,7 +115,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         robot.data.spindexerTargetPosition = targetPosition;
         robot.data.spindexerMoving = isMoving();
 
-        robot.data.intakeRangerCanTurn = distance;
+        robot.data.intakeRangerCanTurn = canRotate;
         robot.data.ballCount = ballCount;
 
         robot.data.TICKS_PER_REVOLUTION = TICKS_PER_REVOLUTION;
@@ -123,19 +125,23 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
     @Override
     public void periodic() {
-        distance = ranger.getDistance(DistanceUnit.MM);
+        canRotate = ranger.getState();
 
-        ballDetected = distance <55    ;
+        ballDetected = canRotate;
 
         if (ballDetected && !lastBallDetected && Globals.AUTO_SPINDEX) {
             if (ballCount >= 3) {
                 CommandScheduler.getInstance().schedule(new ArtifactEjectCommand());
             } else {
                 ballCount++;
-                if (ballCount < 3) {
+                if ((ballCount < 3) && (!ignoreSensor)) {
                     CommandScheduler.getInstance().schedule(new AutoLoadBallCommand());
+                    ElapsedTime timer = new ElapsedTime();
+                    ignoreSensor = true;
                 }
             }
+            new WaitCommand(300);
+            ignoreSensor = false;
         }
 
         lastBallDetected = ballDetected;

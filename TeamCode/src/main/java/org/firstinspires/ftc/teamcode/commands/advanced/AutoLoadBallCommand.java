@@ -12,7 +12,8 @@ public class AutoLoadBallCommand extends SequentialCommandGroup {
     public AutoLoadBallCommand() {
         super(
                 new WaitCommand(Constants.ballDetectWait),
-                new LoadBallCommand()
+                new LoadBallCommand(),
+                new WaitCommand(200)
         );
     }
 }
