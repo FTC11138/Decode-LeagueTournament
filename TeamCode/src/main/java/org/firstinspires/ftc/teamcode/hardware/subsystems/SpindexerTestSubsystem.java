@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.hardware.subsystems;
 
 import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.command.WaitCommand;
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -21,6 +22,9 @@ import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
 import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;
 
+import java.util.concurrent.TimeUnit;
+
+@Configurable
 public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
     private final DcMotorEx spindexerMotor;
@@ -33,12 +37,17 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
     private boolean lastBallDetected;
     private boolean ballDetected;
     private int ballCount = 0;
-    private boolean ignoreSensor = false;
+    public boolean ignoreSensor = false;
 
     // ===== Constants =====
     private static final double TICKS_PER_REVOLUTION = 537.7; // adjust if needed
     private static final double TICKS_120_DEG = TICKS_PER_REVOLUTION / 3.0;
-    private static final double MOVE_POWER = 0.4;
+    public static double MOVE_POWER = 0.5;
+
+    public static double SHOOT_POWER = 0.7;
+
+    ElapsedTime timer;
+    long lastDetectTime;
 
     public SpindexerTestSubsystem(HardwareMap hw, String motorName, String rangerName) {
         spindexerMotor = hw.get(DcMotorEx.class, motorName);
@@ -51,25 +60,27 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         targetPosition = 0;
         spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        timer = new ElapsedTime();
+
         Robot.getInstance().subsystems.add(this);
     }
 
     public void rotate360CW() {
-        moveRelative(-TICKS_PER_REVOLUTION);
+        moveRelative(-TICKS_PER_REVOLUTION, SHOOT_POWER);
         this.ballCount = 0;
     }
 
     public void rotate360CCW() {
-        moveRelative(TICKS_PER_REVOLUTION);
+        moveRelative(TICKS_PER_REVOLUTION, MOVE_POWER);
     }
 
     public void rotate120CW() {
-        moveRelative(-TICKS_120_DEG);
+        moveRelative(-TICKS_120_DEG, SHOOT_POWER);
         this.ballCount --;
     }
 
     public void rotate120CCW() {
-        moveRelative(TICKS_120_DEG);
+        moveRelative(TICKS_120_DEG, MOVE_POWER);
     }
 
     public void stop() {
@@ -100,11 +111,11 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         ballCount = 0;
     }
 
-    private void moveRelative(double deltaTicks) {
+    private void moveRelative(double deltaTicks, double power) {
         targetPosition += (int) deltaTicks;
         spindexerMotor.setTargetPosition(targetPosition);
         spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        spindexerMotor.setPower(MOVE_POWER);
+        spindexerMotor.setPower(power);
     }
 
     @Override
@@ -129,20 +140,21 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
         ballDetected = canRotate;
 
-        if (ballDetected && !lastBallDetected && Globals.AUTO_SPINDEX) {
+        if (ballDetected && !lastBallDetected && Globals.AUTO_SPINDEX && (!ignoreSensor)) {
             if (ballCount >= 3) {
                 CommandScheduler.getInstance().schedule(new ArtifactEjectCommand());
             } else {
                 ballCount++;
-                if ((ballCount < 3) && (!ignoreSensor)) {
+                if (ballCount < 3) {
                     CommandScheduler.getInstance().schedule(new AutoLoadBallCommand());
-                    ElapsedTime timer = new ElapsedTime();
                     ignoreSensor = true;
+                    lastDetectTime = timer.time(TimeUnit.MILLISECONDS);
                 }
             }
-            new WaitCommand(300);
-            ignoreSensor = false;
         }
+
+        long detectTime = timer.time(TimeUnit.MILLISECONDS);
+        if (detectTime - lastDetectTime >= Constants.sensorWait) ignoreSensor = false;
 
         lastBallDetected = ballDetected;
     }

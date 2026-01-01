@@ -39,8 +39,8 @@ public class Robot {
 
     public SpindexerTestSubsystem spindexerTestSubsystem;
 
-//    public TurretOdometrySubsystem turretOdometrySubsystem;
-
+    public TurretOdometrySubsystem turretOdometrySubsystem;
+    
     public ShooterSubsystem shooterSubsystem;
 
     public IntakeSubsystem intakeSubsystem;
