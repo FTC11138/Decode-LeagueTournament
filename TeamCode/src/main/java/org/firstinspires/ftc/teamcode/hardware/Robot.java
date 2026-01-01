@@ -39,8 +39,8 @@ public class Robot {
 
     public SpindexerTestSubsystem spindexerTestSubsystem;
 
-    public TurretOdometrySubsystem turretOdometrySubsystem;
-    
+//    public TurretOdometrySubsystem turretOdometrySubsystem;
+
     public ShooterSubsystem shooterSubsystem;
 
     public IntakeSubsystem intakeSubsystem;
@@ -70,7 +70,7 @@ public class Robot {
 //        turretOdometrySubsystem = new TurretOdometrySubsystem(
 //                this.hardwareMap,
 //                names.turretServo,
-//                names.turretEncoder,
+//                names.leftFront,
 //                follower
 //        );
 

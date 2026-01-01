@@ -42,9 +42,9 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
     // ===== Constants =====
     private static final double TICKS_PER_REVOLUTION = 537.7; // adjust if needed
     private static final double TICKS_120_DEG = TICKS_PER_REVOLUTION / 3.0;
-    public static double MOVE_POWER = 0.5;
+    public static double MOVE_POWER = 1;
 
-    public static double SHOOT_POWER = 0.7;
+    public static double SHOOT_POWER = 0.8;
 
     ElapsedTime timer;
     long lastDetectTime;
@@ -142,6 +142,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
         if (ballDetected && !lastBallDetected && Globals.AUTO_SPINDEX && (!ignoreSensor)) {
             if (ballCount >= 3) {
+                CommandScheduler.getInstance().schedule(new WaitCommand(200 ));
                 CommandScheduler.getInstance().schedule(new ArtifactEjectCommand());
             } else {
                 ballCount++;
