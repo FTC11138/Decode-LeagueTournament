@@ -102,17 +102,18 @@ public class TurretOdometryTuner extends CommandOpMode {
             // Scale for safety
             manual *= 0.5;
 
-            robot.turretSubsystem.setTurretPower(manual);
+            robot.turretOdometrySubsystem.setTurretPower(manual);
         }
 
         // Telemetry
         Pose pose = robot.follower.getPose();
-        double angleDeg = robot.turretSubsystem.getTurretAngleDeg();
+        double angleDeg = robot.turretOdometrySubsystem.getTurretAngleDeg();
 
         telemetry.addLine("=== TURRET ===");
-        telemetry.addData("Mode", robot.turretSubsystem.getTurretState());
+        telemetry.addData("Mode", robot.turretOdometrySubsystem.getTurretState());
         telemetry.addData("Angle", "%.2f°", angleDeg);
         telemetry.addData("Target (x,y)", "%.2f, %.2f", targetX, targetY);
+        telemetry.addData("RawTicks", robot.turretOdometrySubsystem.getRawTicks());
 
         telemetry.addLine();
         telemetry.addLine("=== ROBOT POSE ===");

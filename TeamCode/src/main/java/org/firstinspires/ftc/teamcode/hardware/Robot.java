@@ -39,7 +39,7 @@ public class Robot {
 
     public SpindexerTestSubsystem spindexerTestSubsystem;
 
-//    public TurretOdometrySubsystem turretOdometrySubsystem;
+    public TurretOdometrySubsystem turretOdometrySubsystem;
 
     public ShooterSubsystem shooterSubsystem;
 
@@ -62,19 +62,19 @@ public class Robot {
 
         if (!Globals.IS_AUTO) follower.startTeleopDrive();
 
+        subsystems = new ArrayList<>();
+
 //        cameraSubsystem = new CameraSubsystem(
 //                this.hardwareMap,
 //                names.limelight
 //        );
 
-//        turretOdometrySubsystem = new TurretOdometrySubsystem(
-//                this.hardwareMap,
-//                names.turretServo,
-//                names.leftFront,
-//                follower
-//        );
-
-        subsystems = new ArrayList<>();
+        turretOdometrySubsystem = new TurretOdometrySubsystem(
+                this.hardwareMap,
+                names.turretServo,
+                names.leftFront,
+                follower
+        );
 
         shooterSubsystem = new ShooterSubsystem(
                 this.hardwareMap,

@@ -42,10 +42,12 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     private static final double MIN_DT = 1e-3;
     private static final double MAX_DT = 0.05;
 
-    private static final double ticksPerRev = 751.8;
-    private static final double gearRatio = 108.0 / 258.0;
-    private static final double ticksPerDeg = (ticksPerRev * gearRatio) / 360.0;
-    
+    private static final double ENCODER_TICKS_PER_REV = 8192.0;     // REV Through Bore
+    private static final double ENCODER_REV_PER_TURRET_REV = 102.0 / 45.0;
+
+    private static final double ticksPerDeg =
+            (ENCODER_TICKS_PER_REV * ENCODER_REV_PER_TURRET_REV) / 360.0;
+
     private static final double leftlim = -180;
     private static final double rightlim = 180;
 
@@ -83,6 +85,10 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
     public TurretState getTurretState() {
         return turretState;
+    }
+
+    public double getRawTicks() {
+        return (double) turretEncoder.getCurrentPosition();
     }
 
     public void setTargetPoint(double x, double y) {
