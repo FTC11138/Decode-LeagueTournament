@@ -18,9 +18,7 @@ import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;
 public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
     private final CRServo turretServo;
-
     private final DcMotorEx turretEncoder;
-
     private final Follower follower;
 
     private double targetX;
@@ -47,7 +45,7 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     private static final double ticksPerRev = 751.8;
     private static final double gearRatio = 108.0 / 258.0;
     private static final double ticksPerDeg = (ticksPerRev * gearRatio) / 360.0;
-
+    
     private static final double leftlim = -180;
     private static final double rightlim = 180;
 
@@ -134,15 +132,12 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         double dt = (now - lastNanos) / 1e9;
         lastNanos = now;
 
-        if (dt < MIN_DT) dt = MIN_DT;
-        if (dt > MAX_DT) dt = MAX_DT;
+        dt = clamp(dt, MIN_DT, MAX_DT);
 
         Pose pose = follower.getPose();
 
         if (pose == null) {
             setTurretPower(0.0);
-            lastErrDeg = 0.0;
-            integral = 0.0;
             return;
         }
 
@@ -159,9 +154,10 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         double angleToTargetField = Math.atan2(targetY - turretY, targetX - turretX);
 
         double desiredTurretAngleDeg = Math.toDegrees(angleToTargetField - heading);
-        desiredTurretAngleDeg = wrapTo180(desiredTurretAngleDeg);
+        desiredTurretAngleDeg = normalizeAngle(desiredTurretAngleDeg);
 
         double currentTurretAngleDeg = getTurretAngleDeg();
+
         double errDeg = calculateSmartError(desiredTurretAngleDeg, currentTurretAngleDeg);
 
         if (Math.abs(errDeg) < Constants.deadbandDeg) {
@@ -171,7 +167,9 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         errFiltDeg = Constants.errAlpha * errDeg + (1.0 - Constants.errAlpha) * errFiltDeg;
 
         integral += errFiltDeg * dt;
-        if (errDeg == 0.0) integral *= 0.5;
+        if (Math.abs(errDeg) < Constants.deadbandDeg) {
+            integral *= 0.5;
+        }
         integral = clamp(integral, -Constants.maxIntegral, Constants.maxIntegral);
 
         double deriv = (errFiltDeg - lastErrDeg) / dt;
@@ -183,41 +181,43 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
                         Constants.kI_v * integral +
                         Constants.kD_v * deriv;
 
-        if (errDeg != 0.0 && Constants.kS > 0) {
+        if (Math.abs(errDeg) > Constants.deadbandDeg && Constants.kS > 0) {
             rawPower += Math.signum(errFiltDeg) * Constants.kS;
         }
 
         double maxPower = clamp(Constants.maxPower, 0.0, 1.0);
         double power = clamp(rawPower, -maxPower, maxPower);
 
-        if (Math.abs(power) >= maxPower - 1e-6 && Math.signum(power) == Math.signum(rawPower)) {
-            integral *= 0.95;
+        if (Math.abs(power) >= maxPower - 1e-6 && Math.signum(power) == Math.signum(errFiltDeg)) {
+            integral *= 0.9;
         }
 
         setTurretPower(power);
     }
 
     private double calculateSmartError(double desired, double current) {
-        // calculate both possible paths
-        double shortError = wrapTo180(desired - current);
-        double longError = shortError > 0 ? shortError - 360.0 : shortError + 360.0;
+        desired = normalizeAngle(desired);
+        current = normalizeAngle(current);
 
-        // check if short path would violate limits
-        double shortPathMax = current;
-        double shortPathMin = current;
+        desired = clamp(desired, leftlim, rightlim);
 
-        if (shortError > 0) {
-            shortPathMax = current + shortError;
-        } else {
-            shortPathMin = current + shortError;
+        if (current < leftlim) {
+            return leftlim - current;
+        } else if (current > rightlim) {
+            return rightlim - current;
         }
 
-        // if short pat goes outside limit use long path
-        if (shortPathMax > rightlim || shortPathMin < leftlim) {
-            return longError;
+        double error = desired - current;
+
+        double targetPos = current + error;
+
+        if (targetPos > rightlim) {
+            error = rightlim - current;
+        } else if (targetPos < leftlim) {
+            error = leftlim - current;
         }
 
-        return shortError;
+        return error;
     }
 
     private void resetPID() {
@@ -227,14 +227,17 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         lastNanos = System.nanoTime();
     }
 
-    private static double clamp(double v, double lo, double hi) {
-        return Math.max(lo, Math.min(hi, v));
+    private static double normalizeAngle(double angleDeg) {
+        angleDeg = angleDeg % 360.0;
+        if (angleDeg > 180.0) {
+            angleDeg -= 360.0;
+        } else if (angleDeg < -180.0) {
+            angleDeg += 360.0;
+        }
+        return angleDeg;
     }
 
-    private static double wrapTo180(double angleDeg) {
-        angleDeg %= 360.0;
-        if (angleDeg > 180.0) angleDeg -= 360.0;
-        if (angleDeg < -180.0) angleDeg += 360.0;
-        return angleDeg;
+    private static double clamp(double v, double lo, double hi) {
+        return Math.max(lo, Math.min(hi, v));
     }
 }

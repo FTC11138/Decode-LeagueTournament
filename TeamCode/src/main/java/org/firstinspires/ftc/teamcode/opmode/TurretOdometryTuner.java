@@ -1,126 +1,134 @@
-package org.firstinspires.ftc.teamcode.opmodes.test;
+package org.firstinspires.ftc.teamcode.opmode;
 
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-
-import com.pedropathing.follower.Follower;
+import com.arcrobotics.ftclib.command.CommandOpMode;
+import com.arcrobotics.ftclib.command.CommandScheduler;
+import com.arcrobotics.ftclib.gamepad.GamepadEx;
+import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.hardware.Robot;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsystem;
+import org.firstinspires.ftc.teamcode.util.Globals;
 
-@TeleOp(name="Turret TrackPoint Test", group="Test")
-public class TurretOdometryTuner extends OpMode {
+@TeleOp(name = "Turret Test", group = "Test")
+public class TurretOdometryTuner extends CommandOpMode {
 
-    // --- CONFIG THESE NAMES TO MATCH YOUR RC CONFIG ---
-    private static final String TURRET_SERVO_NAME = "turretServo";     // CRServo name
-    private static final String TURRET_ENCODER_NAME = "turretEncoder"; // Motor port name used ONLY for encoder
+    private final Robot robot = Robot.getInstance();
+    private GamepadEx g1;
 
-    private Follower follower;
-    private TurretOdometrySubsystem turret;
-
-    // target point you can nudge with dpad
+    // Target point you can nudge with dpad
     private double targetX = 16.5;
     private double targetY = 131.0;
 
-    // for button edge detection
-    private boolean lastA = false;
-    private boolean lastY = false;
-
-    // for displaying debug
-    private double lastServoCmd = 0.0;
+    // Button state tracking
+    private boolean lastA;
+    private boolean lastY;
 
     @Override
-    public void init() {
-        // Create your follower the same way your team normally does.
-        // If you already have a Robot singleton that constructs it, use that.
-        //
-        // ---- IMPORTANT ----
-        // Replace this with your team's normal follower creation.
-        // Some teams do: follower = new Follower(hardwareMap);
-        // Others: follower = new Follower(hardwareMap, ...);
-        //
-        this.follower = follower; // <-- change if your constructor differs
+    public void initialize() {
+        g1 = new GamepadEx(gamepad1);
 
-        turret = new TurretOdometrySubsystem(hardwareMap, TURRET_SERVO_NAME, TURRET_ENCODER_NAME, follower);
-        turret.setTargetPoint(targetX, targetY);
-        turret.setTurretState(TurretOdometrySubsystem.TurretState.MANUAL);
+        Globals.IS_AUTO = false;
 
-        telemetry.addLine("Turret TrackPoint Test ready.");
-        telemetry.addLine("A = toggle TRACK_POINT, Y = zero encoder");
-        telemetry.addLine("Left stick X = manual turret power");
-        telemetry.addLine("Dpad = nudge target point");
+        // Initialize robot using your standard method
+        robot.initialize(hardwareMap, telemetry);
+
+        // Optional: Set a starting pose if needed
+        // robot.follower.setStartingPose(new Pose(72, 72, Math.toRadians(0)));
+
+        telemetry.addLine("Turret Test Ready!");
+        telemetry.addLine("A = Toggle Auto Track");
+        telemetry.addLine("Y = Zero Encoder");
+        telemetry.addLine("Left Stick X = Manual Control");
+        telemetry.addLine("Dpad = Nudge Target");
         telemetry.update();
     }
 
     @Override
-    public void loop() {
-        // Update follower (MOST Pedro followers need an update call each loop)
-        // If your Pedro version uses different method name, change it.
-        follower.update();
+    public void run() {
+        // Update command scheduler
+        CommandScheduler.getInstance().run();
 
-        // --- Toggle tracking with A ---
-        boolean a = gamepad1.a;
+        // Update robot systems
+        robot.periodic();
+        robot.updateData();
+        robot.write();
+
+        // Read buttons
+        boolean a = g1.getButton(GamepadKeys.Button.A);
+        boolean y = g1.getButton(GamepadKeys.Button.Y);
+
+        // Toggle tracking with A button
         if (a && !lastA) {
-            if (turret.getTurretState() == TurretOdometrySubsystem.TurretState.MANUAL) {
-                turret.setTurretState(TurretOdometrySubsystem.TurretState.TRACK_POINT);
+            if (robot.turretOdometrySubsystem.getTurretState() == TurretOdometrySubsystem.TurretState.MANUAL) {
+                robot.turretOdometrySubsystem.setTurretState(TurretOdometrySubsystem.TurretState.TRACK_POINT);
+                gamepad1.rumble(200);
             } else {
-                turret.setTurretState(TurretOdometrySubsystem.TurretState.MANUAL);
+                robot.turretOdometrySubsystem.setTurretState(TurretOdometrySubsystem.TurretState.MANUAL);
+                gamepad1.rumble(100);
             }
         }
-        lastA = a;
 
-        // --- Zero encoder with Y ---
-        boolean y = gamepad1.y;
+        // Zero encoder with Y button
         if (y && !lastY) {
-            turret.zeroTurretEncoder();
+            robot.turretOdometrySubsystem.zeroTurretEncoder();
+            gamepad1.rumble(300);
         }
+
+        // Update button states
+        lastA = a;
         lastY = y;
 
-        // --- Nudge target point with dpad (small increments) ---
-        double step = gamepad1.left_bumper ? 0.25 : 1.0; // fine adjust with LB held
+        // Nudge target point with dpad
+        double step = gamepad1.left_bumper ? 0.25 : 1.0; // Fine adjust with left bumper
 
         if (gamepad1.dpad_up) targetY += step;
         if (gamepad1.dpad_down) targetY -= step;
         if (gamepad1.dpad_right) targetX += step;
         if (gamepad1.dpad_left) targetX -= step;
 
-        turret.setTargetPoint(targetX, targetY);
+        robot.turretOdometrySubsystem.setTargetPoint(targetX, targetY);
 
-        // --- Manual control when in MANUAL mode ---
-        if (turret.getTurretState() == TurretOdometrySubsystem.TurretState.MANUAL) {
-            // left stick x controls turret direction
+        // Manual control when in MANUAL mode
+        if (robot.turretOdometrySubsystem.getTurretState() == TurretOdometrySubsystem.TurretState.MANUAL) {
             double manual = gamepad1.left_stick_x;
 
-            // deadband
-            if (Math.abs(manual) < 0.05) manual = 0.0;
+            // Deadband
+            if (Math.abs(manual) < 0.05) {
+                manual = 0.0;
+            }
 
-            // scale to be safer while testing
+            // Scale for safety
             manual *= 0.5;
 
-            lastServoCmd = manual;
-            turret.setTurretPower(manual);
+            robot.turretSubsystem.setTurretPower(manual);
         }
 
-        // --- Run subsystem periodic (PID runs here in TRACK_POINT) ---
-        turret.periodic();
+        // Telemetry
+        Pose pose = robot.follower.getPose();
+        double angleDeg = robot.turretSubsystem.getTurretAngleDeg();
 
-        // --- Telemetry / debug ---
-        Pose pose = follower.getPose();
-        double angleDeg = turret.getTurretAngleDeg();
-
-        telemetry.addData("Mode", turret.getTurretState());
-        telemetry.addData("Turret angle (deg)", "%.2f", angleDeg);
+        telemetry.addLine("=== TURRET ===");
+        telemetry.addData("Mode", robot.turretSubsystem.getTurretState());
+        telemetry.addData("Angle", "%.2f°", angleDeg);
         telemetry.addData("Target (x,y)", "%.2f, %.2f", targetX, targetY);
 
+        telemetry.addLine();
+        telemetry.addLine("=== ROBOT POSE ===");
         if (pose != null) {
-            telemetry.addData("Pose (x,y,h)", "%.2f, %.2f, %.2f rad",
-                    pose.getX(), pose.getY(), pose.getHeading());
+            telemetry.addData("X", "%.2f", pose.getX());
+            telemetry.addData("Y", "%.2f", pose.getY());
+            telemetry.addData("Heading", "%.2f°", Math.toDegrees(pose.getHeading()));
         } else {
-            telemetry.addLine("Pose: null (follower not providing pose)");
+            telemetry.addLine("Pose: NULL");
         }
 
-        telemetry.addData("Manual servo cmd", "%.2f", lastServoCmd);
-        telemetry.addLine("A toggle track | Y zero | Dpad moves target | LB = fine step");
+        telemetry.addLine();
+        telemetry.addLine("=== CONTROLS ===");
+        telemetry.addLine("A: Toggle Track | Y: Zero");
+        telemetry.addLine("Left Stick X: Manual");
+        telemetry.addLine("Dpad: Move Target | LB: Fine Adjust");
 
         telemetry.update();
     }
