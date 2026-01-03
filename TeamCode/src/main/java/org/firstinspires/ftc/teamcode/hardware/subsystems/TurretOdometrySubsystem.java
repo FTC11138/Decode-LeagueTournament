@@ -24,13 +24,15 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     private double targetX;
     private double targetY;
 
-    private final double turretOffsetX = 0;
+    private final double turretOffsetX = -55.603/25.4;
     private final double turretOffsetY = 0;
 
     private double integral = 0.0;
     private double lastErrDeg = 0.0;
     private double errFiltDeg = 0.0;
     private long lastNanos = 0L;
+
+    private double lastSetPower = 0.0;
 
     public enum TurretState {
         MANUAL,
@@ -63,11 +65,11 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         setTurretPower(0.0);
 
         if (ALLIANCE == Globals.COLORS.BLUE) {
-            targetX = 16.5;
-            targetY = 131;
+            targetX = 0;
+            targetY = 144;
         } else if (ALLIANCE == Globals.COLORS.RED) {
-            targetX = 144 - 16.5;
-            targetY = 131;
+            targetX = 144;
+            targetY = 144;
         }
 
         Robot.getInstance().subsystems.add(this);
@@ -111,11 +113,44 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
             pwr = 0;
         }
 
-        turretServo.setPower(clamp(pwr, -1.0, 1.0));
+        lastSetPower = clamp(pwr, -1.0, 1.0);
+        turretServo.setPower(lastSetPower);
     }
 
     public double getTurretAngleDeg() {
         return turretEncoder.getCurrentPosition() / ticksPerDeg;
+    }
+    public double getDesiredTurretAngleDeg() {
+        Pose pose = follower.getPose();
+        if (pose == null) return 0.0;
+
+        double robotX = pose.getX();
+        double robotY = pose.getY();
+        double heading = pose.getHeading();
+
+        double cosH = Math.cos(heading);
+        double sinH = Math.sin(heading);
+
+        double turretX = robotX + turretOffsetX * cosH - turretOffsetY * sinH;
+        double turretY = robotY + turretOffsetX * sinH + turretOffsetY * cosH;
+
+        double angleToTargetField =
+                Math.atan2(targetY - turretY, targetX - turretX);
+
+        double desiredDeg =
+                Math.toDegrees(angleToTargetField - heading);
+
+        return normalizeAngle(desiredDeg);
+    }
+
+    public double getTurretErrorDeg() {
+        double desired = getDesiredTurretAngleDeg();
+        double current = getTurretAngleDeg();
+
+        return calculateSmartError(desired, current);
+    }
+    public double getTurretPower() {
+        return lastSetPower;
     }
 
     @Override

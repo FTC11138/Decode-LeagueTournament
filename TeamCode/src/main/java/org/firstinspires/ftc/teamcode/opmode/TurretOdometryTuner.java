@@ -18,8 +18,8 @@ public class TurretOdometryTuner extends CommandOpMode {
     private GamepadEx g1;
 
     // Target point you can nudge with dpad
-    private double targetX = 16.5;
-    private double targetY = 131.0;
+    private double targetX = 144;
+    private double targetY = 144;
 
     // Button state tracking
     private boolean lastA;
@@ -35,7 +35,7 @@ public class TurretOdometryTuner extends CommandOpMode {
         robot.initialize(hardwareMap, telemetry);
 
         // Optional: Set a starting pose if needed
-        // robot.follower.setStartingPose(new Pose(72, 72, Math.toRadians(0)));
+        robot.follower.setStartingPose(new Pose(72, 72, Math.toRadians(90)));
 
         telemetry.addLine("Turret Test Ready!");
         telemetry.addLine("A = Toggle Auto Track");
@@ -114,6 +114,12 @@ public class TurretOdometryTuner extends CommandOpMode {
         telemetry.addData("Angle", "%.2f°", angleDeg);
         telemetry.addData("Target (x,y)", "%.2f, %.2f", targetX, targetY);
         telemetry.addData("RawTicks", robot.turretOdometrySubsystem.getRawTicks());
+        telemetry.addData("Power for Turret: ", robot.turretOdometrySubsystem.getTurretPower());
+        telemetry.addData("poseH", "%.1f", Math.toDegrees(pose.getHeading()));
+        telemetry.addData("angleToTargetField", "%.1f", Math.toDegrees(Math.atan2(targetY - pose.getY(), targetX - pose.getX())));
+        telemetry.addData("desiredTurret", "%.1f", robot.turretOdometrySubsystem.getDesiredTurretAngleDeg());
+        telemetry.addData("currentTurret", "%.1f", robot.turretOdometrySubsystem.getTurretAngleDeg());
+        telemetry.addData("err", "%.1f", robot.turretOdometrySubsystem.getTurretErrorDeg());
 
         telemetry.addLine();
         telemetry.addLine("=== ROBOT POSE ===");
@@ -130,6 +136,7 @@ public class TurretOdometryTuner extends CommandOpMode {
         telemetry.addLine("A: Toggle Track | Y: Zero");
         telemetry.addLine("Left Stick X: Manual");
         telemetry.addLine("Dpad: Move Target | LB: Fine Adjust");
+
 
         telemetry.update();
     }
