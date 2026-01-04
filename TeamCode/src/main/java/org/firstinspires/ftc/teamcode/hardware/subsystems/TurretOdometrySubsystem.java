@@ -65,11 +65,11 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         setTurretPower(0.0);
 
         if (ALLIANCE == Globals.COLORS.BLUE) {
-            targetX = 0;
-            targetY = 144;
+            targetX = 13;
+            targetY = 136.4;
         } else if (ALLIANCE == Globals.COLORS.RED) {
-            targetX = 144;
-            targetY = 144;
+            targetX = 131;
+            targetY = 136.4;
         }
 
         Robot.getInstance().subsystems.add(this);
