@@ -16,11 +16,14 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.robotcore.internal.network.RobotCoreCommandList;
 import org.firstinspires.ftc.teamcode.commands.subsystem.IntakeStateCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.ShooterStateCommand;
+import org.firstinspires.ftc.teamcode.commands.subsystem.TurretStateCommand;
 import org.firstinspires.ftc.teamcode.hardware.Robot;
 import org.firstinspires.ftc.teamcode.hardware.RobotData;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.SpindexerTestSubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
 
@@ -50,7 +53,8 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
 
         robot.initialize(hardwareMap, telemetry);
 
-        // Bind buttons using FTCLib's binding system
+        robot.follower.setStartingPose(new Pose(72, 72, Math.toRadians(90)));
+
         bindButtons();
     }
 
@@ -127,14 +131,20 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
         scheduleCommand(
                 lastRightTrigger,
                 rightTrigger,
-                new InstantCommand(() -> robot.spindexerTestSubsystem.rotate360CW())
+                new SequentialCommandGroup(
+                        new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW()),
+                        new InstantCommand(() -> robot.spindexerTestSubsystem.rotateResetCW())
+                )
         );
 
         // Left trigger: intake IN
         scheduleCommand(
                 lastLeftTrigger,
                 leftTrigger,
-                new IntakeStateCommand(IntakeSubsystem.IntakeState.IN)
+                new SequentialCommandGroup(
+                        new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
+                        new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
+                )
         );
 
         // Update last button states
