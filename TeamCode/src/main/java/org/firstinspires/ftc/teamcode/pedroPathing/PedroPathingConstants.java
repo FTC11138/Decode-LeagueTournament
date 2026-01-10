@@ -37,9 +37,9 @@ public class PedroPathingConstants {
                     0
             ))
             .headingPIDFCoefficients(new PIDFCoefficients(
-                    1.6,
+                    3,
                     0,
-                    0.06    ,
+                    0.2    ,
                     0.05
             ))
             .secondaryHeadingPIDFCoefficients(new PIDFCoefficients(

@@ -70,6 +70,12 @@ public class RobotData {
 
         telemetry.addData("Intake State", intakeState);
 
+        telemetry.addData("Shooter1 Power", shooterCurrentRPM1);
+
+        telemetry.addData("Shooter2 Power", shooterCurrentRPM2);
+
+
+
         telemetry.addLine("");
         telemetry.addLine("");
 

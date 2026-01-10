@@ -31,23 +31,23 @@ public class Constants {
     public static double intakeOutPower = 1;
 
     public static double ballDetectThreshold = 0.3;
-    public static int ballDetectWait = 340;
+    public static int ballDetectWait = 440;
 
     /* -------------------------------------------- SHOOT CONSTANTS -------------------------------------------- */
 
-    public static double shootPower = -1;
+    public static double shootPower = -0.67;
     public static double readyPower = -1.0;
     public static double reverseStopPower = 1;
     public static double lowerShootPower = 0.7;
 
-    public static double kP = 0.0004; // to make response faster
-    public static double kI = 0.00005; // for undershoot
-    public static double kD = 0.0; // don't change
-    public static double kF = 32767 / ((1440 * 6000) / 60.0);
+    public static double kP = 0.005; // to make response faster
+    public static double kI = 0.000001; // for undershoot
+    public static double kD = 0.0001; // don't change
+    public static double kF = 32767 / 2800;
 
     public static double spindexerRotatePower = 0.5;
 
-    public static int sensorWait = 550;
+    public static int sensorWait = 480;
 
 //    public static double ballDetectThreshold = 3.5;
 //    public static int ballDetectWait = 100;
