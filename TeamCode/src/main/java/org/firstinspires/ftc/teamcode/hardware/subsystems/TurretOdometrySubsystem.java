@@ -11,6 +11,7 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 
 import org.firstinspires.ftc.teamcode.hardware.Robot;
+import org.firstinspires.ftc.teamcode.hardware.RobotData;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
 import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;
@@ -199,13 +200,43 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
     @Override
     public void updateData() {
-        // Optional telemetry (add fields if you have a data struct):
-//         Robot.getInstance().data.turretState = turretState.name();
-//         Robot.getInstance().data.turretAngleDeg = getTurretAngleDeg();
-//         Robot.getInstance().data.turretDesiredDeg = getDesiredTurretAngleDeg();
-//         Robot.getInstance().data.turretErrorDeg = getTurretErrorDeg();
-//         Robot.getInstance().data.turretTargetX = targetX;
-//         Robot.getInstance().data.turretTargetY = targetY;
+        RobotData data = Robot.getInstance().data;
+
+        data.turretState = turretState;
+
+        data.turretAngleDeg = getTurretAngleDeg();
+        data.turretDesiredDeg = getDesiredTurretAngleDeg();
+        data.turretErrorDeg = getTurretErrorDeg();
+        data.turretServoPower = getTurretPower();
+
+        data.turretTargetX = targetX;
+        data.turretTargetY = targetY;
+
+        Pose pose = follower.getPose();
+        if (pose == null) return;
+
+        double robotX = pose.getX();
+        double robotY = pose.getY();
+        double heading = pose.getHeading();
+
+        data.robotHeadingDeg = Math.toDegrees(heading);
+
+        double cosH = Math.cos(heading);
+        double sinH = Math.sin(heading);
+
+        double turretX = robotX + turretOffsetX * sinH + turretOffsetY * cosH;
+        double turretY = robotY - turretOffsetX * cosH + turretOffsetY * sinH;
+
+        data.turretPivotX = turretX;
+        data.turretPivotY = turretY;
+
+        double angleToTargetField =
+                Math.atan2(targetY - turretY, targetX - turretX);
+
+        data.angleToTargetFieldDeg = Math.toDegrees(angleToTargetField);
+
+        double rawRelDeg = Math.toDegrees(angleToTargetField - heading);
+        data.turretRawRelDeg = wrap180(rawRelDeg);
     }
 
     @Override
