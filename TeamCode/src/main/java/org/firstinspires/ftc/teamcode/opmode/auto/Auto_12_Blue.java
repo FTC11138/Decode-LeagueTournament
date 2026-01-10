@@ -158,8 +158,8 @@ public class Auto_12_Blue extends LinearOpMode {
                 new SequentialCommandGroup(
                         new PathCommand(shoot0Path).alongWith(
                             new SequentialCommandGroup(
-                                    new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT),
-                                    new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
+                                    new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT)
+//                                    new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
                             )
                         ),
 
