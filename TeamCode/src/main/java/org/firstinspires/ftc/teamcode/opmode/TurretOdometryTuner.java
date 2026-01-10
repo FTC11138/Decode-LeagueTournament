@@ -72,7 +72,7 @@ public class TurretOdometryTuner extends CommandOpMode {
 
         // Zero encoder with Y button
         if (y && !lastY) {
-            robot.turretOdometrySubsystem.zeroTurretEncoder();
+            robot.turretOdometrySubsystem.zeroTurretEncoderAtStart();
             gamepad1.rumble(300);
         }
 
