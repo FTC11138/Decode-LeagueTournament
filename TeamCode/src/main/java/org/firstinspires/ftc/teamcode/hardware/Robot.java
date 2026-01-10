@@ -33,7 +33,7 @@ public class Robot {
     public Follower follower;
 
 
-    public CameraSubsystem cameraSubsystem;
+//    public CameraSubsystem cameraSubsystem;
 
     public TurretSubsystem turretSubsystem;
 
@@ -111,9 +111,9 @@ public class Robot {
 
     }
 
-    public CameraSubsystem.Obelisk getObelisk() {
-        return cameraSubsystem.getObelisk();
-    }
+//    public CameraSubsystem.Obelisk getObelisk() {
+//        return cameraSubsystem.getObelisk();
+//    }
 
 
 

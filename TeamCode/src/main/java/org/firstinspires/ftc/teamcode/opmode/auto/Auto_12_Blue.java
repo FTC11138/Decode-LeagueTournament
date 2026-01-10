@@ -168,7 +168,7 @@ public class Auto_12_Blue extends LinearOpMode {
                         new InstantCommand(() -> robot.spindexerTestSubsystem.rotate360CW()),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
-                        new PathCommand(intake1Path),
+                        new PathCommand(intake1Path, 0.7),
 
 
 
@@ -178,14 +178,14 @@ public class Auto_12_Blue extends LinearOpMode {
                         ),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
-                        new PathCommand(intake2Path),
+                        new PathCommand(intake2Path, 0.7),
 
                         new PathCommand(shoot2Path).andThen(
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotate360CW())
                         ),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
-                        new PathCommand(intake3Path),
+                        new PathCommand(intake3Path, 0.7),
 
                         new PathCommand(shoot3Path).andThen(
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotate360CW())

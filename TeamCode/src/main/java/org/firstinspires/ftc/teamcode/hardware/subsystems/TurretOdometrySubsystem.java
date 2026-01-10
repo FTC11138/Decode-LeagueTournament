@@ -50,8 +50,8 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     private static final double ticksPerDeg =
             (ENCODER_TICKS_PER_REV * ENCODER_REV_PER_TURRET_REV) / 360.0;
 
-    private static final double leftlim = -180;
-    private static final double rightlim = 180;
+    private static final double leftlim = -70;
+    private static final double rightlim = 290;
 
     public TurretOdometrySubsystem(HardwareMap hw, String servoName, String encoderName, Follower follower) {
         this.turretServo = hw.get(CRServo.class, servoName);
@@ -90,7 +90,8 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     }
 
     public double getRawTicks() {
-        return (double) turretEncoder.getCurrentPosition();
+        // Negate for belt drive (motor and turret rotate same direction)
+        return -(double) turretEncoder.getCurrentPosition();
     }
 
     public void setTargetPoint(double x, double y) {
@@ -113,13 +114,16 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
             pwr = 0;
         }
 
-        lastSetPower = clamp(pwr, -1.0, 1.0);
+        // Negate power for belt drive
+        lastSetPower = clamp(-pwr, -1.0, 1.0);
         turretServo.setPower(lastSetPower);
     }
 
     public double getTurretAngleDeg() {
-        return turretEncoder.getCurrentPosition() / ticksPerDeg;
+        // Use the negated raw ticks
+        return getRawTicks() / ticksPerDeg;
     }
+
     public double getDesiredTurretAngleDeg() {
         Pose pose = follower.getPose();
         if (pose == null) return 0.0;
@@ -149,6 +153,7 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
         return calculateSmartError(desired, current);
     }
+
     public double getTurretPower() {
         return lastSetPower;
     }
@@ -166,6 +171,8 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         if (turretState == TurretState.TRACK_POINT) {
             runTrackPointPID();
         }
+
+//        Robot.getInstance().cameraSubsystem.setCurrentCameraYaw(getTurretAngleDeg());
     }
 
     private void runTrackPointPID() {
