@@ -76,14 +76,25 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
         g1.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(
                 new SequentialCommandGroup(
 //                        new InstantCommand(() -> robot.spindexerTestSubsystem.stop()),
-//                        new InstantCommand(()-> robot.spindexerSubsystem.rotateCCW()),
+//                        new InstantCommand(()-> robot.spindexerTestSubsystem.rotateCCW()),
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.OUT)
                 )
         );
 
+        g1.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(
+                new SequentialCommandGroup(
+                        new InstantCommand(()-> robot.spindexerTestSubsystem.resetCounter())
+                )
+
+        );
+        g1.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(
+                new ShooterStateCommand(ShooterSubsystem.ShooterState.STOP)
+        );
+
+
         // Intake stop
         g1.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(
-                new InstantCommand(() -> robot.intakeSubsystem.updateIntakeState(IntakeSubsystem.IntakeState.STOP))
+                new InstantCommand(() -> robot.intakeSubsystem.updateIntakeState(IntakeSubsystem.IntakeState.OUT))
         );
     }
 
@@ -136,8 +147,9 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
                 lastRightTrigger,
                 rightTrigger,
                 new SequentialCommandGroup(
-                        new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW()
-                        )
+                        new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW()),
+                        new WaitCommand(Constants.shootWait),
+                        new IntakeStateCommand(IntakeSubsystem.IntakeState.IN)
                 )
         );
 

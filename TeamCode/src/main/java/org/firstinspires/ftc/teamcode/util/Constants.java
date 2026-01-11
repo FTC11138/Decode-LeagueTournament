@@ -31,11 +31,13 @@ public class Constants {
     public static double intakeOutPower = 1;
 
     public static double ballDetectThreshold = 0.3;
-    public static int ballDetectWait = 440;
+    public static int ballDetectWait = 170;
+
+    public static int ballDetectWaitAuto = 150;
 
     /* -------------------------------------------- SHOOT CONSTANTS -------------------------------------------- */
 
-    public static double shootPower = -0.75;
+    public static double shootPower = -0.7;
     public static double readyPower = -1.0;
     public static double reverseStopPower = 1;
     public static double lowerShootPower = 0.7;
@@ -47,7 +49,10 @@ public class Constants {
 
     public static double spindexerRotatePower = 0.5;
 
-    public static int sensorWait = 480;
+    public static int sensorWait = 750;
+    public static int shootSensorWait = 1250;
+
+    public static int shootWait = 1800;
 
 //    public static double ballDetectThreshold = 3.5;
 //    public static int ballDetectWait = 100;

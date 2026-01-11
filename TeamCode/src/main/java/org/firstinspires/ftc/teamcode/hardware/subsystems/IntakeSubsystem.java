@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.hardware.Robot;
 import org.firstinspires.ftc.teamcode.util.Constants;
+import org.firstinspires.ftc.teamcode.util.Globals;
 import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;
 
 public class IntakeSubsystem extends RE_SubsystemBase {
@@ -42,12 +43,15 @@ public class IntakeSubsystem extends RE_SubsystemBase {
         switch (intakeState) {
             case IN:
                 intakeMotor.setPower(Constants.intakeInPower);
+                Globals.INTAKING = true;
                 break;
             case OUT:
                 intakeMotor.setPower(Constants.intakeOutPower);
+                Globals.INTAKING = false;
                 break;
             case STOP:
                 intakeMotor.setPower(0);
+                Globals.INTAKING = false;
                 break;
         }
     }

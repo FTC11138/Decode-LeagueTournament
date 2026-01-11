@@ -9,7 +9,7 @@ public class AutonomousMethods {
 
     public static Path buildPath(Pose pose1, Pose pose2, double time) {
         Path path = new Path(new BezierLine(pose1, pose2));
-        path.setLinearHeadingInterpolation(pose1.getHeading(), pose2.getHeading());
+        path.setLinearHeadingInterpolation(pose1.getHeading(), pose2.getHeading(), time);
         return path;
     }
 

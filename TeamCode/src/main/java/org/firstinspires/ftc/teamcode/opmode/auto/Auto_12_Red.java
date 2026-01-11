@@ -22,13 +22,13 @@ import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsyste
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
 
-@Autonomous(name = "Auto_12_Blue")
+@Autonomous(name = "Auto_12_Red")
 @Configurable
-public class Auto_12_Blue extends LinearOpMode {
+public class Auto_12_Red extends LinearOpMode {
 
 
 
-    public static double startX = 40;
+    public static double startX = 144 - 40;
     public static double startY = 135;
     public static double startHeading = 90;
 
@@ -37,42 +37,42 @@ public class Auto_12_Blue extends LinearOpMode {
     public static double shootY = 84;
     public static double shootHeading = 133;
 
-    public static double shoot0X = shootX;
+    public static double shoot0X = 144- shootX;
     public static double shoot0Y = shootY;
-    public static double shoot0Heading = shootHeading;
+    public static double shoot0Heading = 180 - shootHeading;
 
 
-    public static double intake1X = 10;
+    public static double intake1X = 144 - 10;
     public static double intake1Y = 80;
-    public static double intake1Heading = 180;
+    public static double intake1Heading = 180 - 180;
 
 
-    public static double shoot1X = shootX;
+    public static double shoot1X = 144 - shootX;
     public static double shoot1Y = shootY;
-    public static double shoot1Heading = shootHeading;
+    public static double shoot1Heading = 180 - shootHeading;
 
 
-    public static double intake21X = 47.5;
+    public static double intake21X = 144 - 47.5;
     public static double intake21Y = 62;
-    public static double intake21Heading = 180;
+    public static double intake21Heading = 180 - 180;
 
-    public static double intake22X = 9;
+    public static double intake22X = 144 - 9;
     public static double intake22Y = intake21Y;
-    public static double intake22Heading = 180;
+    public static double intake22Heading = 180 - 180;
 
 
-    public static double shoot2X = shootX;
+    public static double shoot2X = 144 - shootX;
     public static double shoot2Y = shootY;
-    public static double shoot2Heading = shootHeading;
+    public static double shoot2Heading = 180 - shootHeading;
 
 
-    public static double intake31X = 47;
+    public static double intake31X = 144 - 47;
     public static double intake31Y = 38;
-    public static double intake31Heading = 180;
+    public static double intake31Heading = 180 - 180;
 
-    public static double intake32X = 9;
+    public static double intake32X = 144 - 9;
     public static double intake32Y = intake31Y;
-    public static double intake32Heading = 180;
+    public static double intake32Heading = 180 - 180;
 
     public static double shoot3X = shootX;
     public static double shoot3Y = shootY;
@@ -152,10 +152,10 @@ public class Auto_12_Blue extends LinearOpMode {
         CommandScheduler.getInstance().schedule(
                 new SequentialCommandGroup(
                         new PathCommand(shoot0Path).alongWith(
-                            new SequentialCommandGroup(
-                                    new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT)
+                                new SequentialCommandGroup(
+                                        new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT)
 //                                    new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
-                            )
+                                )
                         ),
 
                         new WaitCommand(600), // to let the launcher charge up

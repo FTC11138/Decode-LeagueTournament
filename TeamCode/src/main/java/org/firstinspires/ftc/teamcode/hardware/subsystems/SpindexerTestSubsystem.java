@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -28,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
     private final DcMotorEx spindexerMotor;
+    private final Servo led;
     private int targetPosition = 0;
 
     private double distance = 0;
@@ -38,6 +40,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
     private boolean ballDetected;
     private int ballCount = 0;
     public boolean ignoreSensor = false;
+    public int sensorWait = Constants.sensorWait;
 
     // ===== Constants =====
     private static final double TICKS_PER_REVOLUTION = 537.7; // adjust if needed
@@ -52,6 +55,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
     public SpindexerTestSubsystem(HardwareMap hw, String motorName, String rangerName) {
         spindexerMotor = hw.get(DcMotorEx.class, motorName);
+        led = hw.get(Servo.class, "led");
 
         ranger = hw.get(DigitalChannel.class, rangerName);
 
@@ -72,13 +76,22 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
     }
 
     public void rotateShootCW() {
+        Globals.INTAKING = false;
+        Globals.SHOOTING = true;
         moveRelative(-TICKS_PER_SHOOT, SHOOT_POWER);
+        ignoreSensor = true;
+        sensorWait = Constants.shootSensorWait;
+        lastDetectTime = timer.time(TimeUnit.MILLISECONDS);
         this.ballCount = 0;
     }
 
     public void rotateResetCW() {
         moveRelative(TICKS_120_DEG -20, SHOOT_POWER);
         this.ballCount = 0;
+    }
+
+    public void resetCounter(){
+        this.ballCount --;
     }
 
 
@@ -153,25 +166,26 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         ballDetected = canRotate;
 
         if (ballDetected && !lastBallDetected && Globals.AUTO_SPINDEX && (!ignoreSensor)) {
-            if (ballCount >= 3) {
-                CommandScheduler.getInstance().schedule(new WaitCommand(200));
-                CommandScheduler.getInstance().schedule(new ArtifactEjectCommand());
-            } else {
-                if (ballCount < 3) {
-
-                    ignoreSensor = true;
-                    lastDetectTime = timer.time(TimeUnit.MILLISECONDS);
-                }
+            if (Globals.INTAKING) {
+                ignoreSensor = true;
+                sensorWait = Constants.sensorWait;
+                lastDetectTime = timer.time(TimeUnit.MILLISECONDS);
                 ballCount++;
+                led.setPosition(1);
 
-                if(ballCount < 3){
+                if (ballCount < 3){
                     CommandScheduler.getInstance().schedule(new AutoLoadBallCommand());
+                } else {
+                    CommandScheduler.getInstance().schedule(new IntakeStateCommand(IntakeSubsystem.IntakeState.STOP));
                 }
             }
         }
 
         long detectTime = timer.time(TimeUnit.MILLISECONDS);
-        if (detectTime - lastDetectTime >= Constants.sensorWait) ignoreSensor = false;
+        if (detectTime - lastDetectTime >= sensorWait) {
+            ignoreSensor = false;
+            led.setPosition(0);
+        }
 
         lastBallDetected = ballDetected;
     }

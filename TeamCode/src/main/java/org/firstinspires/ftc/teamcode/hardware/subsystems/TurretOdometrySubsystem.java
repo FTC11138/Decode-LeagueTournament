@@ -40,7 +40,8 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
     public enum TurretState {
         MANUAL,
-        TRACK_POINT
+        TRACK_POINT,
+        RETURN_TO_FRONT
     }
 
     private TurretState turretState;
@@ -152,6 +153,10 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
     /** Desired turret angle (continuous) that aims at the target point, respecting limits. */
     public double getDesiredTurretAngleDeg() {
+        if (turretState == TurretState.RETURN_TO_FRONT) {
+            return 0.0;
+        }
+
         Pose pose = follower.getPose();
         if (pose == null) return START_REL_DEG;
 
@@ -241,7 +246,7 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
     @Override
     public void periodic() {
-        if (turretState == TurretState.TRACK_POINT) {
+        if (turretState == TurretState.TRACK_POINT || turretState == TurretState.RETURN_TO_FRONT) {
             runTrackPointPID();
         }
         // Robot.getInstance().cameraSubsystem.setCurrentCameraYaw(getTurretAngleDeg());
@@ -255,7 +260,7 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         dt = clamp(dt, MIN_DT, MAX_DT);
 
         Pose pose = follower.getPose();
-        if (pose == null) {
+        if (pose == null && turretState == TurretState.TRACK_POINT) {
             setTurretPower(0.0);
             return;
         }
