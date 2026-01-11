@@ -24,17 +24,9 @@ public class AutonomousMethods {
         return buildPath(pose1, pose2, 1);
     }
 
-
     public static Path buildCurve(Pose pose1, Pose pose2, Pose control1, double time) {
         Path path = new Path(new BezierCurve(pose1, control1, pose2));
-        path.setLinearHeadingInterpolation(pose1.getHeading(), pose2.getHeading());
-        return path;
-    }
-
-
-    public static Path buildCurveTurnLater(Pose pose1, Pose pose2, Pose control1, double time) {
-        Path path = new Path(new BezierCurve(pose2, control1, pose1));
-        path.setLinearHeadingInterpolation(pose2.getHeading(), pose1.getHeading());
+        path.setLinearHeadingInterpolation(pose1.getHeading(), pose2.getHeading(), time);
         return path;
     }
 
@@ -42,17 +34,9 @@ public class AutonomousMethods {
         return buildCurve(pose1, pose2, control1, 1);
     }
 
-
     public static Path buildCurve(Pose pose1, Pose pose2, Pose control1, Pose control2, double time) {
         Path path = new Path(new BezierCurve(pose1, control1, control2, pose2));
-        path.setLinearHeadingInterpolation(pose1.getHeading(), pose2.getHeading());
-        return path;
-    }
-
-
-    public static Path buildCurveTurnLater(Pose pose1, Pose pose2, Pose control1, Pose control2, double time) {
-        Path path = new Path(new BezierCurve(pose2, control2, control1, pose1));
-        path.setLinearHeadingInterpolation(pose2.getHeading(), pose1.getHeading());
+        path.setLinearHeadingInterpolation(pose1.getHeading(), pose2.getHeading(), time);
         return path;
     }
 
