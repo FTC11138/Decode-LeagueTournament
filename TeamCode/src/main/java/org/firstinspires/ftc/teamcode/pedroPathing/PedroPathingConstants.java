@@ -78,7 +78,7 @@ public class PedroPathingConstants {
             .useBrakeModeInTeleOp(true);
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(-131.728/25.4)
+            .forwardPodY(131.728/25.4)
             .strafePodX(-26.327/25.4)
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
             .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)

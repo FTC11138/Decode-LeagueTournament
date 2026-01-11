@@ -12,6 +12,11 @@ public class Globals {
 
     public static boolean AUTO_SPINDEX = true;
 
+
+    public static boolean INTAKING = false;
+
+    public static boolean SHOOTING = false;
+
     public static COLORS ALLIANCE = COLORS.BLUE;
 
     public enum COLORS {
