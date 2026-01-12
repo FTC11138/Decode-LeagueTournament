@@ -99,8 +99,8 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         moveRelative(TICKS_PER_REVOLUTION, MOVE_POWER);
     }
 
-    public void rotate120CW() {
-        moveRelative(-TICKS_120_DEG, SHOOT_POWER);
+    public void rotate15CW() {
+        moveRelative(TICKS_PER_REVOLUTION/15, MOVE_POWER);
         this.ballCount --;
     }
 

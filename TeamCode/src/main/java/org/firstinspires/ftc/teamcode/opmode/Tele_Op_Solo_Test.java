@@ -55,13 +55,15 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
 
         robot.follower.setStartingPose(new Pose(72, 72, Math.toRadians(90)));
 
+        Constants.shootPower = -0.7;
+
         bindButtons();
     }
 
     private void bindButtons() {
         // Spindexer controls
         g1.getGamepadButton(GamepadKeys.Button.A).whenPressed(
-                new InstantCommand(() -> robot.spindexerTestSubsystem.rotate120CCW())
+                new InstantCommand(() -> robot.spindexerTestSubsystem.rotate360CCW())
         );
 
         g1.getGamepadButton(GamepadKeys.Button.B).whenPressed(
@@ -77,7 +79,7 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
                 new SequentialCommandGroup(
 //                        new InstantCommand(() -> robot.spindexerTestSubsystem.stop()),
 //                        new InstantCommand(()-> robot.spindexerTestSubsystem.rotateCCW()),
-                        new IntakeStateCommand(IntakeSubsystem.IntakeState.OUT)
+                        new InstantCommand(() -> robot.spindexerTestSubsystem.rotate15CW())
                 )
         );
 
@@ -158,6 +160,7 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
                 lastLeftTrigger,
                 leftTrigger,
                 new SequentialCommandGroup(
+                        new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT),
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN)
 //                        new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
                 )
