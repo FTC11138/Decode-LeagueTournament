@@ -61,34 +61,32 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
     }
 
     private void bindButtons() {
-        // Spindexer controls
-        g1.getGamepadButton(GamepadKeys.Button.A).whenPressed(
-                new InstantCommand(() -> robot.spindexerTestSubsystem.rotate360CCW())
-        );
+//        // Spindexer controls
+//        g1.getGamepadButton(GamepadKeys.Button.A).whenPressed(
+//                new InstantCommand(() -> robot.spindexerTestSubsystem.rotate360CCW())
+//        );
 
-        g1.getGamepadButton(GamepadKeys.Button.B).whenPressed(
-                new InstantCommand(() -> robot.spindexerTestSubsystem.rotate360CCW())
-        );
+//        g1.getGamepadButton(GamepadKeys.Button.B).whenPressed(
+//                new InstantCommand(() -> robot.spindexerTestSubsystem.rotate360CCW())
+//        );
 
         // Shooter control
-        g1.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
-                new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT)
-        );
+//        g1.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
+//                new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT)
+//        );
 
-        g1.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(
+        g1.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
                 new SequentialCommandGroup(
-//                        new InstantCommand(() -> robot.spindexerTestSubsystem.stop()),
-//                        new InstantCommand(()-> robot.spindexerTestSubsystem.rotateCCW()),
                         new InstantCommand(() -> robot.spindexerTestSubsystem.rotate15CW())
                 )
         );
 
-        g1.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(
-                new SequentialCommandGroup(
-                        new InstantCommand(()-> robot.spindexerTestSubsystem.resetCounter())
-                )
-
-        );
+//        g1.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(
+//                new SequentialCommandGroup(
+//                        new InstantCommand(()-> robot.spindexerTestSubsystem.resetCounter())
+//                )
+//
+//        );
         g1.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(
                 new ShooterStateCommand(ShooterSubsystem.ShooterState.STOP)
         );
