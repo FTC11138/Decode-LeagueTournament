@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.hardware.subsystems;
 
 import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.command.WaitCommand;
+import com.arcrobotics.ftclib.controller.PIDController;
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
@@ -27,6 +28,8 @@ import java.util.concurrent.TimeUnit;
 
 @Configurable
 public class SpindexerTestSubsystem extends RE_SubsystemBase {
+
+    private final PIDController pid;
 
     private final DcMotorEx spindexerMotor;
     private final Servo led;
@@ -57,13 +60,17 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         spindexerMotor = hw.get(DcMotorEx.class, motorName);
         led = hw.get(Servo.class, "led");
 
+        pid = new PIDController(Constants.spindexer_kP, Constants.spindexer_kI, Constants.spindexer_kD);
+
         ranger = hw.get(DigitalChannel.class, rangerName);
 
         spindexerMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        spindexerMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         targetPosition = 0;
-        spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
 
         timer = new ElapsedTime();
 
@@ -138,9 +145,6 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
     private void moveRelative(double deltaTicks, double power) {
         targetPosition += (int) deltaTicks;
-        spindexerMotor.setTargetPosition(targetPosition);
-        spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        spindexerMotor.setPower(power);
     }
 
     @Override
@@ -161,6 +165,14 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
     @Override
     public void periodic() {
+
+
+        pid.setPID(Constants.spindexer_kP, Constants.spindexer_kI, Constants.spindexer_kD);
+        double power = pid.calculate(getCurrentPosition(), getTargetPosition());
+        spindexerMotor.setPower(power);
+
+
+
         canRotate = ranger.getState();
 
         ballDetected = canRotate;

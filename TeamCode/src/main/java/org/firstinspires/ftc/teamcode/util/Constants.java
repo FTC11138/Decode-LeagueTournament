@@ -47,6 +47,11 @@ public class Constants {
     public static double kD = 0.0001; // don't change
     public static double kF = 32767 / 2800;
 
+
+    public static double spindexer_kP = 0.005; // to make response faster
+    public static double spindexer_kI = 0.000001; // for undershoot
+    public static double spindexer_kD = 0.0001; // don't change
+
     public static double spindexerRotatePower = 0.5;
 
     public static int sensorWait = 750;
