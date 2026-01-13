@@ -164,7 +164,7 @@ public class Auto_12_Blue extends LinearOpMode {
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new WaitCommand(500),
-                        new PathCommand(intake1Path, 0.34),
+                        new PathCommand(intake1Path, 0.6),
 
                         new WaitCommand(300),
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.OUT),
@@ -179,7 +179,7 @@ public class Auto_12_Blue extends LinearOpMode {
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake21Path),
-                        new PathCommand(intake22Path, 0.33),
+                        new PathCommand(intake22Path, 0.6),
 
                         new WaitCommand(300),
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.OUT),
@@ -191,7 +191,7 @@ public class Auto_12_Blue extends LinearOpMode {
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake31Path),
-                        new PathCommand(intake32Path, 0.33),
+                        new PathCommand(intake32Path, 0.6),
 
                         new WaitCommand(300),
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.OUT),

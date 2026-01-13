@@ -54,7 +54,7 @@ public class Constants {
 
     public static double spindexerRotatePower = 0.5;
 
-    public static int sensorWait = 750;
+    public static int sensorWait = 620; // WAS 750
     public static int shootSensorWait = 1250;
 
     public static int shootWait = 1800;
