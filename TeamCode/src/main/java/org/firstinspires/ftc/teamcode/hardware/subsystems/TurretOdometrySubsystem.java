@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.hardware.subsystems;
 
+import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -21,6 +22,8 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     private final CRServo turretServo;
     private final DcMotorEx turretEncoder;
     private final Follower follower;
+
+    private final PIDController pid;
 
     private double targetX;
     private double targetY;
@@ -74,6 +77,8 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         this.turretServo = hw.get(CRServo.class, servoName);
         this.turretEncoder = hw.get(DcMotorEx.class, encoderName);
         this.follower = follower;
+
+        this.pid = new PIDController(Constants.kP_v, Constants.kI_v, Constants.kD_v);
 
         turretEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // correct: we only READ ticks
@@ -277,12 +282,6 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     }
 
     private void runTrackPointPID() {
-        long now = System.nanoTime();
-        double dt = (now - lastNanos) / 1e9;
-        lastNanos = now;
-
-        dt = clamp(dt, MIN_DT, MAX_DT);
-
         Pose pose = follower.getPose();
         if (pose == null && turretState == TurretState.TRACK_POINT) {
             setTurretPower(0.0);
@@ -291,42 +290,11 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
         double desiredDeg = getDesiredTurretAngleDeg();
         double currentDeg = getTurretAngleDeg();
-        double errDeg = desiredDeg - currentDeg;
 
-        if (Math.abs(errDeg) < Constants.deadbandDeg) {
-            errDeg = 0.0;
-        }
-
-        errFiltDeg = Constants.errAlpha * errDeg + (1.0 - Constants.errAlpha) * errFiltDeg;
-
-        integral += errFiltDeg * dt;
-        if (Math.abs(errDeg) < Constants.deadbandDeg) {
-            integral *= 0.5;
-        }
-        integral = clamp(integral, -Constants.maxIntegral, Constants.maxIntegral);
-
-        double deriv = (errFiltDeg - lastErrDeg) / dt;
-        deriv = clamp(deriv, -Constants.maxDeriv, Constants.maxDeriv);
-        lastErrDeg = errFiltDeg;
-
-        double rawPower =
-                Constants.kP_v * errFiltDeg +
-                        Constants.kI_v * integral +
-                        Constants.kD_v * deriv;
-
-        if (Math.abs(errDeg) > Constants.deadbandDeg && Constants.kS > 0) {
-            rawPower += Math.signum(errFiltDeg) * Constants.kS;
-        }
-
-        double maxPower = clamp(Constants.maxPower, 0.0, 1.0);
-        double power = clamp(rawPower, -maxPower, maxPower);
-
-        // Anti-windup if saturated pushing same direction as error
-        if (Math.abs(power) >= maxPower - 1e-6 && Math.signum(power) == Math.signum(errFiltDeg)) {
-            integral *= 0.9;
-        }
-
+        double power = pid.calculate(currentDeg, desiredDeg);
         setTurretPower(power);
+
+        pid.setPID(Constants.kP_v, Constants.kI_v, Constants.kD_v);
     }
 
     private void resetPID() {
