@@ -159,8 +159,8 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
                 leftTrigger,
                 new SequentialCommandGroup(
                         new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT),
-                        new IntakeStateCommand(IntakeSubsystem.IntakeState.IN)
-//                        new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
+                        new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
+                        new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
                 )
         );
 

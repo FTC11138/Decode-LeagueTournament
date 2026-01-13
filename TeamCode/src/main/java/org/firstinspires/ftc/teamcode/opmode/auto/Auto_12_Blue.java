@@ -33,17 +33,17 @@ public class Auto_12_Blue extends LinearOpMode {
     public static double startHeading = 90;
 
 
-    public static double shootX = 59.5;
-    public static double shootY = 84;
-    public static double shootHeading = 133;
+    public static double shootX = 52;
+    public static double shootY = 85;
+    public static double shootHeading = 180;
 
     public static double shoot0X = shootX;
     public static double shoot0Y = shootY;
     public static double shoot0Heading = shootHeading;
 
 
-    public static double intake1X = 10;
-    public static double intake1Y = 80;
+    public static double intake1X = 18;
+    public static double intake1Y = 85;
     public static double intake1Heading = 180;
 
 
@@ -56,7 +56,7 @@ public class Auto_12_Blue extends LinearOpMode {
     public static double intake21Y = 62;
     public static double intake21Heading = 180;
 
-    public static double intake22X = 9;
+    public static double intake22X = 10;
     public static double intake22Y = intake21Y;
     public static double intake22Heading = 180;
 
@@ -70,7 +70,7 @@ public class Auto_12_Blue extends LinearOpMode {
     public static double intake31Y = 38;
     public static double intake31Heading = 180;
 
-    public static double intake32X = 9;
+    public static double intake32X = 10;
     public static double intake32Y = intake31Y;
     public static double intake32Heading = 180;
 
@@ -136,7 +136,7 @@ public class Auto_12_Blue extends LinearOpMode {
 
         buildPaths();
         Constants.ballDetectWait = Constants.ballDetectWaitAuto;
-        Constants.shootPower = -0.76;
+        Constants.shootPower = -0.67;
 
         robot.follower.setStartingPose(new Pose(startX, startY, Math.toRadians(startHeading)));
 
@@ -153,54 +153,50 @@ public class Auto_12_Blue extends LinearOpMode {
                 new SequentialCommandGroup(
                         new PathCommand(shoot0Path).alongWith(
                             new SequentialCommandGroup(
-                                    new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT)
-//                                    new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
+                                    new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT),
+                                    new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
                             )
                         ),
 
-                        new WaitCommand(600), // to let the launcher charge up
+                        new WaitCommand(1500), // to let the launcher charge up
                         //Shoot PreLoad
                         new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW()),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new WaitCommand(500),
-                        new PathCommand(intake1Path, 0.6),
-
-                        new WaitCommand(300),
-                        new IntakeStateCommand(IntakeSubsystem.IntakeState.OUT),
+                        new PathCommand(intake1Path,0.5),
 
 
-
-
+                        new WaitCommand(200),
                         new PathCommand(shoot1Path).andThen(
+                                new WaitCommand(1000),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
                         new WaitCommand(500),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake21Path),
-                        new PathCommand(intake22Path, 0.6),
+                        new PathCommand(intake22Path,0.47),
 
-                        new WaitCommand(300),
-                        new IntakeStateCommand(IntakeSubsystem.IntakeState.OUT),
-
+                        new WaitCommand(100),
                         new PathCommand(shoot2Path).andThen(
+                                new WaitCommand(1000),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
                         new WaitCommand(500),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake31Path),
-                        new PathCommand(intake32Path, 0.6),
+                        new PathCommand(intake32Path,0.47),
 
-                        new WaitCommand(300),
-                        new IntakeStateCommand(IntakeSubsystem.IntakeState.OUT),
-
+                        new WaitCommand(200),
                         new PathCommand(shoot3Path).andThen(
+                                new WaitCommand(1000),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
                         new WaitCommand(600),
-                        new ShooterStateCommand(ShooterSubsystem.ShooterState.STOP)
+                        new ShooterStateCommand(ShooterSubsystem.ShooterState.STOP),
+                        new IntakeStateCommand(IntakeSubsystem.IntakeState.STOP)
                 )
         );
 

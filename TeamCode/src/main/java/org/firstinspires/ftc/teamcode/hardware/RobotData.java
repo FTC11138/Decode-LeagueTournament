@@ -8,6 +8,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.CameraSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.SpindexerTestSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
@@ -19,6 +20,7 @@ public class RobotData {
 
     public CameraSubsystem.Obelisk obelisk = CameraSubsystem.Obelisk.PPP;
 
+    public double spindexerCurrent = 0;
     public int spindexerCurrentPosition = 0;
     public int spindexerTargetPosition = 0;
     public boolean spindexerMoving = false;
@@ -39,6 +41,9 @@ public class RobotData {
     public double shooterCurrentRPM2 = 0;
 
     public TurretOdometrySubsystem.TurretState turretState = TurretOdometrySubsystem.TurretState.MANUAL;
+
+
+    public SpindexerTestSubsystem spindexerTestSubsystem;
 
     // Target point in FIELD coords
     public double turretTargetX = 0;
@@ -77,6 +82,10 @@ public class RobotData {
         telemetry.addData("ALLIANCE", Globals.ALLIANCE);
 
         telemetry.addLine("");
+        telemetry.addLine("");
+
+        telemetry.addData("SPINDEXER VOLTAGE: ", spindexerCurrent);
+
         telemetry.addLine("");
 
         telemetry.addData("Spindexer Current Pos", spindexerCurrentPosition);
