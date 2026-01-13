@@ -109,8 +109,8 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
             robot.write();
 
             robot.follower.setTeleOpDrive(
-                    -gamepad1.left_stick_y,
-                    -gamepad1.left_stick_x,
+                    -gamepad1.left_stick_y * 1.4,
+                    -gamepad1.left_stick_x * 1.4,
                     -gamepad1.right_stick_x / 2.0,
                     Constants.robotCentric // Robot Centric
             );

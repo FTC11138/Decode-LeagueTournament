@@ -41,7 +41,8 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     public enum TurretState {
         MANUAL,
         TRACK_POINT,
-        RETURN_TO_FRONT
+        RETURN_TO_FRONT,
+        RETURN_TO_START
     }
 
     private TurretState turretState;
@@ -62,7 +63,7 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
     // Constraint: turret cannot rotate more than ±180° from its start
     private static final double LEFT_LIM_DEG  = START_REL_DEG - 180.0;  // -90
-    private static final double RIGHT_LIM_DEG = START_REL_DEG + 180.0;  // 270
+    private static final double RIGHT_LIM_DEG = START_REL_DEG + 170.0;  // 270
 
     // Encoder-to-angle calibration offset:
     // turretAngleDeg = ticks/TICKS_PER_DEG + turretZeroDeg
@@ -117,13 +118,31 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         return -(double) turretEncoder.getCurrentPosition();
     }
 
-    /** Call when the turret is physically at the START orientation (90° left of robot forward). */
-    public void zeroTurretEncoderAtStart() {
+    /** Call when turret is at any known angle to calibrate the encoder */
+    public void calibrateTurretAt(double currentAngleDeg) {
+        double currentTicks = getRawTicks();
+        turretZeroDeg = currentAngleDeg - (currentTicks / TICKS_PER_DEG);
+        resetPID();
+    }
+
+    /**
+     * Call when the turret is physically at the START orientation (90° left of robot forward).
+     * This resets the encoder to zero and sets the zero offset.
+     */
+    public void calibrateTurretAtStart() {
         turretEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
         turretZeroDeg = START_REL_DEG;
         resetPID();
+    }
+
+    /**
+     * Deprecated: Use calibrateTurretAtStart() instead for clarity.
+     * Call when the turret is physically at the START orientation (90° left of robot forward).
+     */
+    @Deprecated
+    public void zeroTurretEncoderAtStart() {
+        calibrateTurretAtStart();
     }
 
     /** Current turret angle in continuous degrees (should stay within [-90, 270] if obeying limits). */
@@ -139,9 +158,8 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     public void setTurretPower(double pwr) {
         double angleDeg = getTurretAngleDeg();
 
-        // Apply belt inversion first (this is what actually gets sent)
-        // If direction is wrong, flip here OR in getRawTicks(), but not both.
-        double servoPwr = clamp(-pwr, -1.0, 1.0);
+        // No negation here - belt inversion handled in getRawTicks()
+        double servoPwr = clamp(pwr, -1.0, 1.0);
 
         // Gate based on the REAL direction
         if (angleDeg <= LEFT_LIM_DEG && servoPwr < 0) servoPwr = 0;
@@ -155,6 +173,10 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     public double getDesiredTurretAngleDeg() {
         if (turretState == TurretState.RETURN_TO_FRONT) {
             return 0.0;
+        }
+
+        if (turretState == TurretState.RETURN_TO_START) {
+            return START_REL_DEG;
         }
 
         Pose pose = follower.getPose();
@@ -246,7 +268,9 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
     @Override
     public void periodic() {
-        if (turretState == TurretState.TRACK_POINT || turretState == TurretState.RETURN_TO_FRONT) {
+        if (turretState == TurretState.TRACK_POINT ||
+                turretState == TurretState.RETURN_TO_FRONT ||
+                turretState == TurretState.RETURN_TO_START) {
             runTrackPointPID();
         }
         // Robot.getInstance().cameraSubsystem.setCurrentCameraYaw(getTurretAngleDeg());

@@ -39,7 +39,7 @@ public class PedroPathingConstants {
             .headingPIDFCoefficients(new PIDFCoefficients(
                     3,
                     0,
-                    0.2    ,
+                    0.2,
                     0.05
             ))
             .secondaryHeadingPIDFCoefficients(new PIDFCoefficients(
@@ -56,7 +56,7 @@ public class PedroPathingConstants {
                     0.002
             ))
             .secondaryDrivePIDFCoefficients(new FilteredPIDFCoefficients(
-                    0.01   ,
+                    0.01,
                     0,
                     0.000001,
                     0.6,
@@ -64,6 +64,7 @@ public class PedroPathingConstants {
             ))
             .drivePIDFSwitch(15)
             .centripetalScaling(0.0005);
+
     public static MecanumConstants driveConstants = new MecanumConstants()
             .leftFrontMotorName(config.leftFront)
             .leftRearMotorName(config.leftRear)
@@ -73,8 +74,8 @@ public class PedroPathingConstants {
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .xVelocity(78.261926752421046666666666666667)
-            .yVelocity(61.494551922189565)
+            .xVelocity(90)      // Increased for TeleOp speed
+            .yVelocity(70)      // Increased for TeleOp speed
             .useBrakeModeInTeleOp(true);
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
@@ -102,6 +103,7 @@ public class PedroPathingConstants {
             10,
             1
     );
+
     //Add custom localizers or drivetrains here
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
@@ -109,7 +111,5 @@ public class PedroPathingConstants {
                 .pinpointLocalizer(localizerConstants)
                 .pathConstraints(pathConstraints)
                 .build();
-
     }
-
 }
