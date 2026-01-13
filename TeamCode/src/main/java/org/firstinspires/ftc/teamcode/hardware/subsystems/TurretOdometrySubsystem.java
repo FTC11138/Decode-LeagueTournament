@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import static org.firstinspires.ftc.teamcode.util.Globals.ALLIANCE;
 
+import android.icu.text.RelativeDateTimeFormatter;
+
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 
@@ -36,7 +38,9 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
     public enum TurretState {
         MANUAL,
-        TRACK_POINT
+        TRACK_POINT,
+        CENTER,
+        AUTOANGLE
     }
 
     private TurretState turretState;
@@ -65,11 +69,11 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         setTurretPower(0.0);
 
         if (ALLIANCE == Globals.COLORS.BLUE) {
-            targetX = 13;
-            targetY = 136.4;
+            targetX = 0;
+            targetY = 144;
         } else if (ALLIANCE == Globals.COLORS.RED) {
-            targetX = 131;
-            targetY = 136.4;
+            targetX = 144;
+            targetY = 144;
         }
 
         Robot.getInstance().subsystems.add(this);
@@ -171,6 +175,13 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         if (turretState == TurretState.TRACK_POINT) {
             runTrackPointPID();
         }
+        if(turretState == TurretState.CENTER){
+            runCenterPID();
+        }
+
+        if(turretState == TurretState.AUTOANGLE){
+            runAutoAnglePID();
+        }
 
 //        Robot.getInstance().cameraSubsystem.setCurrentCameraYaw(getTurretAngleDeg());
     }
@@ -203,6 +214,141 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
         double desiredTurretAngleDeg = Math.toDegrees(angleToTargetField - heading);
         desiredTurretAngleDeg = normalizeAngle(desiredTurretAngleDeg);
+
+        double currentTurretAngleDeg = getTurretAngleDeg();
+
+        double errDeg = calculateSmartError(desiredTurretAngleDeg, currentTurretAngleDeg);
+
+        if (Math.abs(errDeg) < Constants.deadbandDeg) {
+            errDeg = 0.0;
+        }
+
+        errFiltDeg = Constants.errAlpha * errDeg + (1.0 - Constants.errAlpha) * errFiltDeg;
+
+        integral += errFiltDeg * dt;
+        if (Math.abs(errDeg) < Constants.deadbandDeg) {
+            integral *= 0.5;
+        }
+        integral = clamp(integral, -Constants.maxIntegral, Constants.maxIntegral);
+
+        double deriv = (errFiltDeg - lastErrDeg) / dt;
+        deriv = clamp(deriv, -Constants.maxDeriv, Constants.maxDeriv);
+        lastErrDeg = errFiltDeg;
+
+        double rawPower =
+                Constants.kP_v * errFiltDeg +
+                        Constants.kI_v * integral +
+                        Constants.kD_v * deriv;
+
+        if (Math.abs(errDeg) > Constants.deadbandDeg && Constants.kS > 0) {
+            rawPower += Math.signum(errFiltDeg) * Constants.kS;
+        }
+
+        double maxPower = clamp(Constants.maxPower, 0.0, 1.0);
+        double power = clamp(rawPower, -maxPower, maxPower);
+
+        if (Math.abs(power) >= maxPower - 1e-6 && Math.signum(power) == Math.signum(errFiltDeg)) {
+            integral *= 0.9;
+        }
+
+        setTurretPower(power);
+    }
+    private void runCenterPID() {
+        long now = System.nanoTime();
+        double dt = (now - lastNanos) / 1e9;
+        lastNanos = now;
+
+        dt = clamp(dt, MIN_DT, MAX_DT);
+
+        Pose pose = follower.getPose();
+
+        if (pose == null) {
+            setTurretPower(0.0);
+            return;
+        }
+
+        double robotX = pose.getX();
+        double robotY = pose.getY();
+        double heading = pose.getHeading();
+
+        double cosH = Math.cos(heading);
+        double sinH = Math.sin(heading);
+
+        double turretX = robotX + turretOffsetX * cosH - turretOffsetY * sinH;
+        double turretY = robotY + turretOffsetX * sinH + turretOffsetY * cosH;
+
+        double angleToTargetField = Math.atan2(targetY - turretY, targetX - turretX);
+
+        double desiredTurretAngleDeg = 0;
+        desiredTurretAngleDeg = 0;
+
+        double currentTurretAngleDeg = getTurretAngleDeg();
+
+        double errDeg = calculateSmartError(desiredTurretAngleDeg, currentTurretAngleDeg);
+
+        if (Math.abs(errDeg) < Constants.deadbandDeg) {
+            errDeg = 0.0;
+        }
+
+        errFiltDeg = Constants.errAlpha * errDeg + (1.0 - Constants.errAlpha) * errFiltDeg;
+
+        integral += errFiltDeg * dt;
+        if (Math.abs(errDeg) < Constants.deadbandDeg) {
+            integral *= 0.5;
+        }
+        integral = clamp(integral, -Constants.maxIntegral, Constants.maxIntegral);
+
+        double deriv = (errFiltDeg - lastErrDeg) / dt;
+        deriv = clamp(deriv, -Constants.maxDeriv, Constants.maxDeriv);
+        lastErrDeg = errFiltDeg;
+
+        double rawPower =
+                Constants.kP_v * errFiltDeg +
+                        Constants.kI_v * integral +
+                        Constants.kD_v * deriv;
+
+        if (Math.abs(errDeg) > Constants.deadbandDeg && Constants.kS > 0) {
+            rawPower += Math.signum(errFiltDeg) * Constants.kS;
+        }
+
+        double maxPower = clamp(Constants.maxPower, 0.0, 1.0);
+        double power = clamp(rawPower, -maxPower, maxPower);
+
+        if (Math.abs(power) >= maxPower - 1e-6 && Math.signum(power) == Math.signum(errFiltDeg)) {
+            integral *= 0.9;
+        }
+
+        setTurretPower(power);
+    }
+
+    private void runAutoAnglePID() {
+        long now = System.nanoTime();
+        double dt = (now - lastNanos) / 1e9;
+        lastNanos = now;
+
+        dt = clamp(dt, MIN_DT, MAX_DT);
+
+        Pose pose = follower.getPose();
+
+        if (pose == null) {
+            setTurretPower(0.0);
+            return;
+        }
+
+        double robotX = pose.getX();
+        double robotY = pose.getY();
+        double heading = pose.getHeading();
+
+        double cosH = Math.cos(heading);
+        double sinH = Math.sin(heading);
+
+        double turretX = robotX + turretOffsetX * cosH - turretOffsetY * sinH;
+        double turretY = robotY + turretOffsetX * sinH + turretOffsetY * cosH;
+
+        double angleToTargetField = Math.atan2(targetY - turretY, targetX - turretX);
+
+        double desiredTurretAngleDeg = -55;
+        desiredTurretAngleDeg = -55;
 
         double currentTurretAngleDeg = getTurretAngleDeg();
 

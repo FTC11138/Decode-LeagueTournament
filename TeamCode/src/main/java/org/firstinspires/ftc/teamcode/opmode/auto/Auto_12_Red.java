@@ -153,8 +153,8 @@ public class Auto_12_Red extends LinearOpMode {
                 new SequentialCommandGroup(
                         new PathCommand(shoot0Path).alongWith(
                                 new SequentialCommandGroup(
-                                        new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT)
-//                                    new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
+                                        new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT),
+                                    new TurretStateCommand(TurretOdometrySubsystem.TurretState.CENTER)
                                 )
                         ),
 
@@ -164,10 +164,8 @@ public class Auto_12_Red extends LinearOpMode {
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new WaitCommand(500),
-                        new PathCommand(intake1Path, 0.6),
+                        new PathCommand(intake1Path,0.6),
 
-                        new WaitCommand(300),
-                        new IntakeStateCommand(IntakeSubsystem.IntakeState.OUT),
 
                         new PathCommand(shoot1Path).andThen(
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
@@ -176,10 +174,8 @@ public class Auto_12_Red extends LinearOpMode {
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake21Path),
-                        new PathCommand(intake22Path, 0.6),
+                        new PathCommand(intake22Path,0.6),
 
-                        new WaitCommand(300),
-                        new IntakeStateCommand(IntakeSubsystem.IntakeState.OUT),
 
                         new PathCommand(shoot2Path).andThen(
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
@@ -188,10 +184,8 @@ public class Auto_12_Red extends LinearOpMode {
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake31Path),
-                        new PathCommand(intake32Path, 0.6),
+                        new PathCommand(intake32Path,0.6),
 
-                        new WaitCommand(300),
-                        new IntakeStateCommand(IntakeSubsystem.IntakeState.OUT),
 
                         new PathCommand(shoot3Path).andThen(
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())

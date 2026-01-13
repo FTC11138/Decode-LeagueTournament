@@ -14,9 +14,11 @@ import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.commands.advanced.ArtifactEjectCommand;
 import org.firstinspires.ftc.teamcode.commands.advanced.AutoLoadBallCommand;
+import org.firstinspires.ftc.teamcode.commands.advanced.IntakeUnstuckCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.IntakeStateCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.LoadBallCommand;
 import org.firstinspires.ftc.teamcode.hardware.Robot;
@@ -36,6 +38,11 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
     private int targetPosition = 0;
 
     private double distance = 0;
+
+    private double lastCurrent;
+    private double current;
+    private boolean ignoreUnstuck;
+    private long lastUnstuckTime;
 
     private final DigitalChannel ranger;
     private boolean canRotate = false;
@@ -154,6 +161,11 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         ballCount = 0;
     }
 
+    public double getCurrent() {
+        if (spindexerMotor == null) return 0;
+        return spindexerMotor.getCurrent(CurrentUnit.AMPS);
+    }
+
     private void moveRelative(double deltaTicks, double power) {
         targetPosition += (int) deltaTicks;
         wasStuck = false; // Reset stuck flag when new movement is commanded
@@ -180,6 +192,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
     public void updateData() {
         Robot robot = Robot.getInstance();
 
+        robot.data.spindexerCurrent = getCurrent();
         robot.data.spindexerCurrentPosition = getCurrentPosition();
         robot.data.spindexerTargetPosition = targetPosition;
         robot.data.spindexerMoving = isMoving();
@@ -201,24 +214,24 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         int currentPos = getCurrentPosition();
         double error = getTargetPosition() - currentPos;
 
-        // Check if spindexer has moved
-        if (Math.abs(currentPos - lastPosition) > STUCK_THRESHOLD_TICKS) {
-            lastPosition = currentPos;
-            lastMovementTime = timer.time(TimeUnit.MILLISECONDS);
-        }
-
-        // Check if stuck (not at target and hasn't moved in 2 seconds)
-        long currentTime = timer.time(TimeUnit.MILLISECONDS);
-        if (Math.abs(error) > DEADBAND_TICKS &&
-                (currentTime - lastMovementTime) > STUCK_TIMEOUT_MS &&
-                !wasStuck) {
-
-            // Spindexer is stuck! Revert to nearest valid position
-            int nearestValid = getNearestValidPosition(currentPos);
-            targetPosition = nearestValid;
-            wasStuck = true;
-            lastMovementTime = currentTime; // Reset timer
-        }
+//        // Check if spindexer has moved
+//        if (Math.abs(currentPos - lastPosition) > STUCK_THRESHOLD_TICKS) {
+//            lastPosition = currentPos;
+//            lastMovementTime = timer.time(TimeUnit.MILLISECONDS);
+//        }
+//
+//        // Check if stuck (not at target and hasn't moved in 2 seconds)
+//        long currentTime = timer.time(TimeUnit.MILLISECONDS);
+//        if (Math.abs(error) > DEADBAND_TICKS &&
+//                (currentTime - lastMovementTime) > STUCK_TIMEOUT_MS &&
+//                !wasStuck) {
+//
+//            // Spindexer is stuck! Revert to nearest valid position
+//            int nearestValid = getNearestValidPosition(currentPos);
+//            targetPosition = nearestValid;
+//            wasStuck = true;
+//            lastMovementTime = currentTime; // Reset timer
+//        }
 
         double power;
         if (Math.abs(error) < DEADBAND_TICKS) {
@@ -250,13 +263,27 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
             }
         }
 
+
+        current = getCurrent();
+        if (current >= Constants.stuckCurrent && !ignoreUnstuck) {
+            CommandScheduler.getInstance().schedule(new IntakeUnstuckCommand());
+            ignoreUnstuck = true;
+            lastDetectTime = timer.time(TimeUnit.MILLISECONDS);
+        }
+
         long detectTime = timer.time(TimeUnit.MILLISECONDS);
         if (detectTime - lastDetectTime >= sensorWait) {
             ignoreSensor = false;
             led.setPosition(0);
         }
 
+        if (detectTime - lastUnstuckTime >= Constants.unstuckWait) {
+            ignoreUnstuck = false;
+        }
+
         lastBallDetected = ballDetected;
+
+
     }
 }
 //import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;

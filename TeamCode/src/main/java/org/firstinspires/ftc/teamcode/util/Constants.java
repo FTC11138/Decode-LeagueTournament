@@ -35,6 +35,10 @@ public class Constants {
 
     public static int ballDetectWaitAuto = 160;
 
+    public static int intakeUnstuckDelay = 100;
+    public static int unstuckWait = 300;
+
+
     /* -------------------------------------------- SHOOT CONSTANTS -------------------------------------------- */
 
     public static double shootPower = -0.7;
@@ -54,6 +58,9 @@ public class Constants {
 
     public static double spindexerRotatePower = 0.5;
 
+    public static double stuckCurrent = 2.5;
+
+
     public static int sensorWait = 620; // WAS 750
     public static int shootSensorWait = 1250;
 
@@ -67,7 +74,7 @@ public class Constants {
 
     /* -------------------------------------------- TURRET CONSTANTS -------------------------------------------- */
     // Controller helper params
-    public static double deadbandDeg = 0.30;
+    public static double deadbandDeg = 0.2;
     public static double errAlpha = 0.35;
 
     // Safety rails
@@ -79,7 +86,7 @@ public class Constants {
     public static double kS = 0.0;      //set to 0.03 is something is still messing up
 
     // PID gains mapping error->power (tune these)
-    public static double kP_v = 0.007;
+    public static double kP_v = 0.013;
     public static double kI_v = 0.000;
     public static double kD_v = 0.0010;
 }
