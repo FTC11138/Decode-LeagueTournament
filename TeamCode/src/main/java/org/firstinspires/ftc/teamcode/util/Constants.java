@@ -79,7 +79,7 @@ public class Constants {
     public static double kS = 0.0;      //set to 0.03 is something is still messing up
 
     // PID gains mapping error->power (tune these)
-    public static double kP_v = 0.020;
+    public static double kP_v = 0.007;
     public static double kI_v = 0.000;
     public static double kD_v = 0.0010;
 }

@@ -18,7 +18,7 @@ public class TurretOdometryTuner extends CommandOpMode {
     private GamepadEx g1;
 
     // Target point you can nudge with dpad
-    private double targetX = 144;
+    private double targetX = 0;
     private double targetY = 144;
 
     // Button state tracking
@@ -72,7 +72,7 @@ public class TurretOdometryTuner extends CommandOpMode {
 
         // Zero encoder with Y button
         if (y && !lastY) {
-            robot.turretOdometrySubsystem.zeroTurretEncoderAtStart();
+//            robot.turretOdometrySubsystem.zeroTurretEncoderAtStart();
             gamepad1.rumble(300);
         }
 
