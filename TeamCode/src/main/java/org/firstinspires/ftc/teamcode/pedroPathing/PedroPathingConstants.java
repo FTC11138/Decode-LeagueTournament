@@ -24,16 +24,16 @@ public class PedroPathingConstants {
             .forwardZeroPowerAcceleration(-25.9346931313679598)
             .lateralZeroPowerAcceleration(-67.342491844080064)
             .translationalPIDFCoefficients(new PIDFCoefficients(
-                    0.16,
+                    0.115, //0.11
                     0,
-                    0.02,
+                    0.04,
                     0
             ))
             .translationalPIDFSwitch(4)
             .secondaryTranslationalPIDFCoefficients(new PIDFCoefficients(
-                    0.16,
+                    0.115,
                     0,
-                    0.02,
+                    0.04,
                     0
             ))
             .headingPIDFCoefficients(new PIDFCoefficients(
@@ -96,7 +96,7 @@ public class PedroPathingConstants {
     public static PathConstraints pathConstraints = new PathConstraints(
             0.995,
             0.1,
-            0.1,
+            0.2,
             0.009,
             250,
             1.25,

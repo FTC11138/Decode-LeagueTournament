@@ -17,7 +17,7 @@ public class Globals {
 
     public static boolean SHOOTING = false;
 
-    public static COLORS ALLIANCE = COLORS.BLUE;
+    public static COLORS ALLIANCE = COLORS.RED;
 
     public enum COLORS {
         RED,

@@ -55,7 +55,7 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
 
         robot.follower.setStartingPose(robot.data.currentPose);
 
-        Constants.shootPower = -0.7;
+        Constants.shootPower = -0.65;
 
         bindButtons();
     }
@@ -88,7 +88,7 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
 //
 //        );
         g1.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(
-                new ShooterStateCommand(ShooterSubsystem.ShooterState.STOP)
+                new TurretStateCommand(TurretOdometrySubsystem.TurretState.CENTER)
         );
 
 
@@ -108,12 +108,17 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
             robot.updateData();
             robot.write();
 
+            gamepad1.rumble(500);
+            gamepad1.setLedColor(0, 1, 0, 1000);
+
             robot.follower.setTeleOpDrive(
                     -gamepad1.left_stick_y * 1.4,
                     -gamepad1.left_stick_x * 1.4,
                     -gamepad1.right_stick_x / 2.0,
                     Constants.robotCentric // Robot Centric
             );
+
+
         }
 
         // Read special buttons

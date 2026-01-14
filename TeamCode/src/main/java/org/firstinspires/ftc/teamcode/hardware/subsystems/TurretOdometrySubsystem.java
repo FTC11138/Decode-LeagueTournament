@@ -64,7 +64,10 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         this.turretEncoder = hw.get(DcMotorEx.class, encoderName);
         this.follower = follower;
 
-        turretEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        if(Globals.IS_AUTO){
+            turretEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        }
+
         turretEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         turretState = TurretState.MANUAL;
@@ -74,8 +77,8 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
             targetX = 0;
             targetY = 144;
         } else if (ALLIANCE == Globals.COLORS.RED) {
-            targetX = 144;
-            targetY = 144;
+            targetX = 137;
+            targetY = 137;
         }
 
         startPosition = Robot.getInstance().data.turretAngleDeg;
@@ -129,7 +132,7 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
     public double getTurretAngleDeg() {
         // Use the negated raw ticks
-        return getRawTicks() / ticksPerDeg;
+        return startPosition + getRawTicks() / ticksPerDeg;
     }
 
     public double getDesiredTurretAngleDeg() {
