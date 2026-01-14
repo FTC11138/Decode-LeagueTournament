@@ -57,8 +57,6 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     private static final double leftlim = -90;
     private static final double rightlim = 90;
 
-    private double startPosition = 0;
-
     public TurretOdometrySubsystem(HardwareMap hw, String servoName, String encoderName, Follower follower) {
         this.turretServo = hw.get(CRServo.class, servoName);
         this.turretEncoder = hw.get(DcMotorEx.class, encoderName);
@@ -80,8 +78,6 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
             targetX = 137;
             targetY = 137;
         }
-
-        startPosition = Robot.getInstance().data.turretAngleDeg;
 
         Robot.getInstance().subsystems.add(this);
         lastNanos = System.nanoTime();
@@ -132,7 +128,7 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
     public double getTurretAngleDeg() {
         // Use the negated raw ticks
-        return startPosition + getRawTicks() / ticksPerDeg;
+        return getRawTicks() / ticksPerDeg;
     }
 
     public double getDesiredTurretAngleDeg() {

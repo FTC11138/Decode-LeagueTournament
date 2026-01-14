@@ -35,7 +35,6 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
     private final DcMotorEx spindexerMotor;
     private final Servo led;
-    private int startPosition = 0;
     private int targetPosition = 0;
 
     private double distance = 0;
@@ -88,7 +87,6 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         spindexerMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         targetPosition = 0;
-        startPosition = Robot.getInstance().data.spindexerCurrentPosition;
 
 
         timer = new ElapsedTime();
@@ -213,7 +211,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
         pid.setPID(Constants.spindexer_kP, Constants.spindexer_kI, Constants.spindexer_kD);
 
-        int currentPos = startPosition + getCurrentPosition();
+        int currentPos = getCurrentPosition();
         double error = getTargetPosition() - currentPos;
 
 //        // Check if spindexer has moved
