@@ -112,162 +112,162 @@ public class CameraSubsystem extends RE_SubsystemBase {
 
     // ==================== LOCALIZATION FUNCTIONS ====================
 
-    public boolean relocalizeFromAprilTags() {
-        if (limelightResult == null || !limelightResult.isValid()) {
-            return false;
-        }
+//    public boolean relocalizeFromAprilTags() {
+//        if (limelightResult == null || !limelightResult.isValid()) {
+//            return false;
+//        }
+//
+//        List<LLResultTypes.FiducialResult> fiducials = limelightResult.getFiducialResults();
+//        if (fiducials == null || fiducials.isEmpty()) {
+//            return false;
+//        }
+//
+//        List<Pose> poseEstimates = new ArrayList<>();
+//        List<Double> poseWeights = new ArrayList<>();
+//
+//        for (LLResultTypes.FiducialResult fiducial : fiducials) {
+//            int tagId = fiducial.getFiducialId();
+//            if (getTagIndex(tagId) < 0) continue;
+//
+//            Pose robotPose = calculateRobotPoseFromFiducial(fiducial);
+//
+//            if (robotPose != null) {
+//                double weight = calculateFiducialWeight(fiducial);
+//                poseEstimates.add(robotPose);
+//                poseWeights.add(weight);
+//            }
+//        }
+//
+//        if (poseEstimates.isEmpty()) {
+//            return false;
+//        }
+//
+//        Pose finalPose = weightedAveragePose(poseEstimates, poseWeights);
+//
+//        if (finalPose != null) {
+//            follower.setPose(finalPose);
+//            return true;
+//        }
+//
+//        return false;
+//    }
 
-        List<LLResultTypes.FiducialResult> fiducials = limelightResult.getFiducialResults();
-        if (fiducials == null || fiducials.isEmpty()) {
-            return false;
-        }
+//    private double calculateFiducialWeight(LLResultTypes.FiducialResult fiducial) {
+//        double txDeg = Math.abs(fiducial.getTargetXDegrees());
+//        double tyDeg = Math.abs(fiducial.getTargetYDegrees());
+//
+//        double angularScore = 1.0 / (1.0 + (txDeg * txDeg + tyDeg * tyDeg) / 100.0);
+//
+//        double areaScore = 1.0;
+//        if (fiducial.getTargetArea() > 0) {
+//            areaScore = Math.min(fiducial.getTargetArea() / 2.0, 1.0);
+//        }
+//
+//        return angularScore * areaScore;
+//    }
+//
+//    private Pose weightedAveragePose(List<Pose> poses, List<Double> weights) {
+//        if (poses.isEmpty()) return null;
+//
+//        double totalWeight = 0.0;
+//        double weightedX = 0.0;
+//        double weightedY = 0.0;
+//        double weightedCosHeading = 0.0;
+//        double weightedSinHeading = 0.0;
+//
+//        for (int i = 0; i < poses.size(); i++) {
+//            Pose pose = poses.get(i);
+//            double weight = weights.get(i);
+//
+//            weightedX += pose.getX() * weight;
+//            weightedY += pose.getY() * weight;
+//            weightedCosHeading += Math.cos(pose.getHeading()) * weight;
+//            weightedSinHeading += Math.sin(pose.getHeading()) * weight;
+//            totalWeight += weight;
+//        }
+//
+//        if (totalWeight < 1e-6) return null;
+//
+//        double avgX = weightedX / totalWeight;
+//        double avgY = weightedY / totalWeight;
+//        double avgHeading = Math.atan2(weightedSinHeading, weightedCosHeading);
+//
+//        return new Pose(avgX, avgY, avgHeading);
+//    }
 
-        List<Pose> poseEstimates = new ArrayList<>();
-        List<Double> poseWeights = new ArrayList<>();
-
-        for (LLResultTypes.FiducialResult fiducial : fiducials) {
-            int tagId = fiducial.getFiducialId();
-            if (getTagIndex(tagId) < 0) continue;
-
-            Pose robotPose = calculateRobotPoseFromFiducial(fiducial);
-
-            if (robotPose != null) {
-                double weight = calculateFiducialWeight(fiducial);
-                poseEstimates.add(robotPose);
-                poseWeights.add(weight);
-            }
-        }
-
-        if (poseEstimates.isEmpty()) {
-            return false;
-        }
-
-        Pose finalPose = weightedAveragePose(poseEstimates, poseWeights);
-
-        if (finalPose != null) {
-            follower.setPose(finalPose);
-            return true;
-        }
-
-        return false;
-    }
-
-    private double calculateFiducialWeight(LLResultTypes.FiducialResult fiducial) {
-        double txDeg = Math.abs(fiducial.getTargetXDegrees());
-        double tyDeg = Math.abs(fiducial.getTargetYDegrees());
-
-        double angularScore = 1.0 / (1.0 + (txDeg * txDeg + tyDeg * tyDeg) / 100.0);
-
-        double areaScore = 1.0;
-        if (fiducial.getTargetArea() > 0) {
-            areaScore = Math.min(fiducial.getTargetArea() / 2.0, 1.0);
-        }
-
-        return angularScore * areaScore;
-    }
-
-    private Pose weightedAveragePose(List<Pose> poses, List<Double> weights) {
-        if (poses.isEmpty()) return null;
-
-        double totalWeight = 0.0;
-        double weightedX = 0.0;
-        double weightedY = 0.0;
-        double weightedCosHeading = 0.0;
-        double weightedSinHeading = 0.0;
-
-        for (int i = 0; i < poses.size(); i++) {
-            Pose pose = poses.get(i);
-            double weight = weights.get(i);
-
-            weightedX += pose.getX() * weight;
-            weightedY += pose.getY() * weight;
-            weightedCosHeading += Math.cos(pose.getHeading()) * weight;
-            weightedSinHeading += Math.sin(pose.getHeading()) * weight;
-            totalWeight += weight;
-        }
-
-        if (totalWeight < 1e-6) return null;
-
-        double avgX = weightedX / totalWeight;
-        double avgY = weightedY / totalWeight;
-        double avgHeading = Math.atan2(weightedSinHeading, weightedCosHeading);
-
-        return new Pose(avgX, avgY, avgHeading);
-    }
-
-    private Pose calculateRobotPoseFromFiducial(LLResultTypes.FiducialResult fiducial) {
-        int tagIndex = getTagIndex(fiducial.getFiducialId());
-        if (tagIndex < 0) return null;
-
-        AprilTagPosition tagPos = TAG_POSITIONS[tagIndex];
-
-        double txDeg = fiducial.getTargetXDegrees();
-        double tyDeg = fiducial.getTargetYDegrees();
-
-        // Distance calculation using FIXED pitch
-        double tyRad = Math.toRadians(tyDeg);
-        double denom = Math.tan(CAMERA_PITCH_RAD + tyRad);
-
-        if (Math.abs(denom) < 1e-6) {
-            return null;
-        }
-
-        double distanceM = (TAG_HEIGHT_M - CAMERA_HEIGHT_M) / denom;
-
-        if (distanceM <= 0 || distanceM > 5.0) {
-            return null;
-        }
-
-        double distanceInches = distanceM * 39.3701;
-
-        // Apply turret yaw rotation
-        double effectiveTxDeg = txDeg + currentCameraYawDeg;
-        double txRad = Math.toRadians(effectiveTxDeg);
-        double horizontalOffset = distanceInches * Math.tan(txRad);
-
-        double angleTagToCamera = tagPos.heading + Math.PI;
-
-        double cameraX_field = tagPos.x
-                + distanceInches * Math.cos(angleTagToCamera)
-                - horizontalOffset * Math.sin(angleTagToCamera);
-
-        double cameraY_field = tagPos.y
-                + distanceInches * Math.sin(angleTagToCamera)
-                + horizontalOffset * Math.cos(angleTagToCamera);
-
-        double cameraHeading = angleTagToCamera - txRad;
-        cameraHeading = normalizeAngle(cameraHeading);
-
-        // Calculate robot heading (subtract turret rotation)
-        double robotHeading = cameraHeading - Math.toRadians(currentCameraYawDeg);
-        robotHeading = normalizeAngle(robotHeading);
-
-        // Blend with odometry heading
-        double currentHeading = follower.getPose().getHeading();
-        double headingDiff = normalizeAngle(robotHeading - currentHeading);
-
-        if (Math.abs(headingDiff) < Math.toRadians(30)) {
-            robotHeading = normalizeAngle(currentHeading + headingDiff * 0.7);
-        }
-
-        // Calculate dynamic camera offset based on turret angle
-        double turretAngleRad = Math.toRadians(currentCameraYawDeg);
-        double cos_turret = Math.cos(turretAngleRad);
-        double sin_turret = Math.sin(turretAngleRad);
-
-        // Camera offset from robot center = turret offset + rotated camera-from-turret offset
-        double cameraOffsetX = TURRET_OFFSET_X + (CAMERA_FROM_TURRET_X * cos_turret - CAMERA_FROM_TURRET_Y * sin_turret);
-        double cameraOffsetY = TURRET_OFFSET_Y + (CAMERA_FROM_TURRET_X * sin_turret + CAMERA_FROM_TURRET_Y * cos_turret);
-
-        // Transform from camera position to robot center
-        double cos_robot = Math.cos(robotHeading);
-        double sin_robot = Math.sin(robotHeading);
-
-        double robotX = cameraX_field - (cameraOffsetX * cos_robot - cameraOffsetY * sin_robot);
-        double robotY = cameraY_field - (cameraOffsetX * sin_robot + cameraOffsetY * sin_robot);
-
-        return new Pose(robotX, robotY, robotHeading);
-    }
+//    private Pose calculateRobotPoseFromFiducial(LLResultTypes.FiducialResult fiducial) {
+//        int tagIndex = getTagIndex(fiducial.getFiducialId());
+//        if (tagIndex < 0) return null;
+//
+//        AprilTagPosition tagPos = TAG_POSITIONS[tagIndex];
+//
+//        double txDeg = fiducial.getTargetXDegrees();
+//        double tyDeg = fiducial.getTargetYDegrees();
+//
+//        // Distance calculation using FIXED pitch
+//        double tyRad = Math.toRadians(tyDeg);
+//        double denom = Math.tan(CAMERA_PITCH_RAD + tyRad);
+//
+//        if (Math.abs(denom) < 1e-6) {
+//            return null;
+//        }
+//
+//        double distanceM = (TAG_HEIGHT_M - CAMERA_HEIGHT_M) / denom;
+//
+//        if (distanceM <= 0 || distanceM > 5.0) {
+//            return null;
+//        }
+//
+//        double distanceInches = distanceM * 39.3701;
+//
+//        // Apply turret yaw rotation
+//        double effectiveTxDeg = txDeg + currentCameraYawDeg;
+//        double txRad = Math.toRadians(effectiveTxDeg);
+//        double horizontalOffset = distanceInches * Math.tan(txRad);
+//
+//        double angleTagToCamera = tagPos.heading + Math.PI;
+//
+//        double cameraX_field = tagPos.x
+//                + distanceInches * Math.cos(angleTagToCamera)
+//                - horizontalOffset * Math.sin(angleTagToCamera);
+//
+//        double cameraY_field = tagPos.y
+//                + distanceInches * Math.sin(angleTagToCamera)
+//                + horizontalOffset * Math.cos(angleTagToCamera);
+//
+//        double cameraHeading = angleTagToCamera - txRad;
+//        cameraHeading = normalizeAngle(cameraHeading);
+//
+//        // Calculate robot heading (subtract turret rotation)
+//        double robotHeading = cameraHeading - Math.toRadians(currentCameraYawDeg);
+//        robotHeading = normalizeAngle(robotHeading);
+//
+//        // Blend with odometry heading
+//        double currentHeading = follower.getPose().getHeading();
+//        double headingDiff = normalizeAngle(robotHeading - currentHeading);
+//
+//        if (Math.abs(headingDiff) < Math.toRadians(30)) {
+//            robotHeading = normalizeAngle(currentHeading + headingDiff * 0.7);
+//        }
+//
+//        // Calculate dynamic camera offset based on turret angle
+//        double turretAngleRad = Math.toRadians(currentCameraYawDeg);
+//        double cos_turret = Math.cos(turretAngleRad);
+//        double sin_turret = Math.sin(turretAngleRad);
+//
+//        // Camera offset from robot center = turret offset + rotated camera-from-turret offset
+//        double cameraOffsetX = TURRET_OFFSET_X + (CAMERA_FROM_TURRET_X * cos_turret - CAMERA_FROM_TURRET_Y * sin_turret);
+//        double cameraOffsetY = TURRET_OFFSET_Y + (CAMERA_FROM_TURRET_X * sin_turret + CAMERA_FROM_TURRET_Y * cos_turret);
+//
+//        // Transform from camera position to robot center
+//        double cos_robot = Math.cos(robotHeading);
+//        double sin_robot = Math.sin(robotHeading);
+//
+//        double robotX = cameraX_field - (cameraOffsetX * cos_robot - cameraOffsetY * sin_robot);
+//        double robotY = cameraY_field - (cameraOffsetX * sin_robot + cameraOffsetY * sin_robot);
+//
+//        return new Pose(robotX, robotY, robotHeading);
+//    }
 
     private double normalizeAngle(double angle) {
         while (angle > Math.PI) angle -= 2 * Math.PI;
