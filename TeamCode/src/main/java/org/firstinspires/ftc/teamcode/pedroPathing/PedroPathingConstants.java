@@ -74,8 +74,8 @@ public class PedroPathingConstants {
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .xVelocity(90)      // Increased for TeleOp speed
-            .yVelocity(70)      // Increased for TeleOp speed
+            .xVelocity(94)      // Increased for TeleOp speed
+            .yVelocity(80)      // Increased for TeleOp speed
             .useBrakeModeInTeleOp(true);
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
