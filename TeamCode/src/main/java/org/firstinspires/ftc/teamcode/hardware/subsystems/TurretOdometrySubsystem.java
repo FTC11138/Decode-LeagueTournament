@@ -57,6 +57,8 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     private static final double leftlim = -90;
     private static final double rightlim = 90;
 
+    private double startPosition = 0;
+
     public TurretOdometrySubsystem(HardwareMap hw, String servoName, String encoderName, Follower follower) {
         this.turretServo = hw.get(CRServo.class, servoName);
         this.turretEncoder = hw.get(DcMotorEx.class, encoderName);
@@ -75,6 +77,8 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
             targetX = 144;
             targetY = 144;
         }
+
+        startPosition = Robot.getInstance().data.turretAngleDeg;
 
         Robot.getInstance().subsystems.add(this);
         lastNanos = System.nanoTime();
@@ -164,10 +168,48 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
     @Override
     public void updateData() {
-        // Robot.getInstance().data.turretState = turretState.name();
-        // Robot.getInstance().data.turretAngleDeg = getTurretAngleDeg();
-        // Robot.getInstance().data.turretTargetX = targetX;
-        // Robot.getInstance().data.turretTargetY = targetY;
+        Robot robot = Robot.getInstance();
+
+        // Basic state + raw readings
+        robot.data.turretState = turretState;
+        robot.data.turretTargetX = targetX;
+        robot.data.turretTargetY = targetY;
+
+        robot.data.turretAngleDeg = getTurretAngleDeg();
+        robot.data.turretServoPower = lastSetPower; // actual power sent to servo (after inversion/limits)
+
+        Pose pose = follower.getPose();
+        if (pose == null) return;
+
+        // Robot pose
+        double robotX = pose.getX();
+        double robotY = pose.getY();
+        double heading = pose.getHeading(); // radians
+
+        double cosH = Math.cos(heading);
+        double sinH = Math.sin(heading);
+
+        // Turret pivot in FIELD coords (applying offset in robot frame)
+        double turretX = robotX + turretOffsetX * cosH - turretOffsetY * sinH;
+        double turretY = robotY + turretOffsetX * sinH + turretOffsetY * cosH;
+
+        robot.data.turretPivotX = turretX;
+        robot.data.turretPivotY = turretY;
+
+        // Angles for debugging
+        robot.data.robotHeadingDeg = Math.toDegrees(heading);
+
+        double angleToTargetFieldRad = Math.atan2(targetY - turretY, targetX - turretX);
+        robot.data.angleToTargetFieldDeg = Math.toDegrees(angleToTargetFieldRad);
+
+        // Raw relative (fieldAngle - heading) wrapped to [-180, 180]
+        robot.data.turretRawRelDeg = normalizeAngle(robot.data.angleToTargetFieldDeg - robot.data.robotHeadingDeg);
+
+        // Desired turret angle (relative to robot, normalized)
+        robot.data.turretDesiredDeg = getDesiredTurretAngleDeg();
+
+        // Error (uses your smart clamp-to-limits logic)
+        robot.data.turretErrorDeg = calculateSmartError(robot.data.turretDesiredDeg, robot.data.turretAngleDeg);
     }
 
     @Override
@@ -350,7 +392,7 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         double desiredTurretAngleDeg = -55;
         desiredTurretAngleDeg = -55;
 
-        double currentTurretAngleDeg = getTurretAngleDeg();
+        double currentTurretAngleDeg = startPosition + getTurretAngleDeg();
 
         double errDeg = calculateSmartError(desiredTurretAngleDeg, currentTurretAngleDeg);
 
