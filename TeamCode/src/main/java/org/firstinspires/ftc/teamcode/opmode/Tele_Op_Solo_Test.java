@@ -53,7 +53,7 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
 
         robot.initialize(hardwareMap, telemetry);
 
-        robot.follower.setStartingPose(new Pose(72, 72, Math.toRadians(90)));
+        robot.follower.setStartingPose(robot.data.currentPose);
 
         Constants.shootPower = -0.7;
 
