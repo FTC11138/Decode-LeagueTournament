@@ -16,11 +16,13 @@ import org.firstinspires.ftc.teamcode.commands.subsystem.IntakeStateCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.ShooterStateCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.TurretStateCommand;
 import org.firstinspires.ftc.teamcode.hardware.Robot;
+import org.firstinspires.ftc.teamcode.hardware.RobotData;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
+import org.firstinspires.ftc.teamcode.util.PoseStorage;
 
 @Autonomous(name = "Auto_12_Blue")
 @Configurable
@@ -132,6 +134,7 @@ public class Auto_12_Blue extends LinearOpMode {
     @Override
     public void runOpMode() {
         Robot robot = Robot.getInstance();
+        robot.data = new RobotData();
 
         Globals.IS_AUTO = true;
         robot.initialize(hardwareMap, telemetry);
@@ -209,6 +212,7 @@ public class Auto_12_Blue extends LinearOpMode {
             robot.updateData();
             robot.periodic();
             robot.write();
+            PoseStorage.pose = robot.follower.getPose();
         }
     }
 }

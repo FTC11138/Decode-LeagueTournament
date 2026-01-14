@@ -26,6 +26,7 @@ import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsyste
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
+import org.firstinspires.ftc.teamcode.util.PoseStorage;
 
 import kotlin.time.Instant;
 
@@ -53,7 +54,7 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
 
         robot.initialize(hardwareMap, telemetry);
 
-        robot.follower.setStartingPose(robot.data.currentPose);
+        robot.follower.setStartingPose(PoseStorage.pose);
 
         Constants.shootPower = -0.65;
 
