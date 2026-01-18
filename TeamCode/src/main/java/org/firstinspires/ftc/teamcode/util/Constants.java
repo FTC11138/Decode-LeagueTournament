@@ -41,10 +41,10 @@ public class Constants {
 
     /* -------------------------------------------- SHOOT CONSTANTS -------------------------------------------- */
 
-    public static double shootPower = -0.7;
+    public static double shootPower = -0.71;
     public static double readyPower = -1.0;
     public static double reverseStopPower = 1;
-    public static double lowerShootPower = 0.7;
+    public static double lowerShootPower = 0.71;
 
     public static double kP = 0.005; // to make response faster
     public static double kI = 0.000001; // for undershoot
@@ -77,6 +77,9 @@ public class Constants {
     public static double deadbandDeg = 0.2;
     public static double errAlpha = 0.35;
 
+    public static double CENTER_KP = 0.008;   // lower than 0.02
+    public static double CENTER_KD = 0.0001;
+
     // Safety rails
     public static double maxIntegral = 30.0;   // deg·s (anti-windup)
     public static double maxDeriv = 320.0;  // deg/s (D clamp)
@@ -86,8 +89,8 @@ public class Constants {
     public static double kS = 0.0;      //set to 0.03 is something is still messing up
 
     // PID gains mapping error->power (tune these)
-    public static double kP_v = 0.013;
-    public static double kI_v = 0.000;
-    public static double kD_v = 0.0010;
+    public static double kP_v = 0.008;
+    public static double kI_v = 0.0005;
+    public static double kD_v = 0.0009;//0.0010
 }
 

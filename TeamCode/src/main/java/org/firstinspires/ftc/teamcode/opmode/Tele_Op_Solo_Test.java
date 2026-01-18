@@ -29,7 +29,6 @@ import org.firstinspires.ftc.teamcode.util.Globals;
 
 import kotlin.time.Instant;
 
-@TeleOp(name = "SoloTestReal")
 public class Tele_Op_Solo_Test extends CommandOpMode {
 
     private final Robot robot = Robot.getInstance();
@@ -54,6 +53,13 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
         robot.initialize(hardwareMap, telemetry);
 
         robot.follower.setStartingPose(robot.data.currentPose);
+
+        if (Globals.ALLIANCE == Globals.COLORS.RED){
+            gamepad1.setLedColor(0, 0, 1, Gamepad.LED_DURATION_CONTINUOUS);
+        }
+        else {
+            gamepad1.setLedColor(1, 0, 0, Gamepad.LED_DURATION_CONTINUOUS);
+        }
 
         Constants.shootPower = -0.65;
 
@@ -88,7 +94,7 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
 //
 //        );
         g1.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(
-                new TurretStateCommand(TurretOdometrySubsystem.TurretState.CENTER)
+                new ShooterStateCommand(ShooterSubsystem.ShooterState.STOP)
         );
 
 
@@ -108,7 +114,8 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
             robot.updateData();
             robot.write();
 
-            gamepad1.rumble(500);
+
+
             gamepad1.setLedColor(0, 1, 0, 1000);
 
             robot.follower.setTeleOpDrive(
@@ -143,6 +150,8 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
             gamepad1.rumble(2000);
         }
 
+
+
         // Handle triggers as digital buttons
         boolean leftTrigger = gamepad1.left_trigger > 0.5;
         boolean rightTrigger = gamepad1.right_trigger > 0.5;
@@ -165,7 +174,7 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
                 new SequentialCommandGroup(
                         new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT),
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
-                        new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
+                        new TurretStateCommand(TurretSubsystem.TurretState.TRACK)
                 )
         );
 

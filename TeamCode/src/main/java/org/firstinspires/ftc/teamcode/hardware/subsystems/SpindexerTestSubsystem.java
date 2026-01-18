@@ -255,12 +255,24 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
                 sensorWait = Constants.sensorWait;
                 lastDetectTime = timer.time(TimeUnit.MILLISECONDS);
                 ballCount++;
-                led.setPosition(1);
+                //led.setPosition(0.277);
 
                 if (ballCount < 3) {
                     CommandScheduler.getInstance().schedule(new AutoLoadBallCommand());
                 } else {
                     CommandScheduler.getInstance().schedule(new IntakeStateCommand(IntakeSubsystem.IntakeState.STOP));
+                }
+
+                if(ballCount == 1){
+                    led.setPosition(0.722);
+                }
+
+                if(ballCount == 2){
+                    led.setPosition(0.334);
+                }
+
+                if(ballCount == 3){
+                    led.setPosition(0.51);
                 }
             }
         }
@@ -270,7 +282,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         if (current >= Constants.stuckCurrent && !ignoreUnstuck) {
             CommandScheduler.getInstance().schedule(new IntakeUnstuckCommand());
             ignoreUnstuck = true;
-            lastDetectTime = timer.time(TimeUnit.MILLISECONDS);
+            lastUnstuckTime = timer.time(TimeUnit.MILLISECONDS);
         }
 
         long detectTime = timer.time(TimeUnit.MILLISECONDS);

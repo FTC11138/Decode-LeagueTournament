@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.hardware.subsystems;
 
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -18,58 +19,57 @@ public class TurretSubsystem extends RE_SubsystemBase {
     private double lastErrDeg = 0.0;
     private double errFiltDeg = 0.0;
     private long lastNanos = 0L;
+    private boolean firstMeasurement = true;
+
+    // Center PD state
+    private double lastCenterAngle = 0.0;
+    private boolean firstCenterMeasurement = true;
 
     public enum TurretState {
         MANUAL,
-        AUTO_AIM
+        TRACK,
+        CENTER  // Return to center position
     }
 
-    private TurretState turretState;
+    private TurretState turretState = TurretState.MANUAL;
 
-    private static final double MIN_DT = 1e-3;  // 1 ms
-    private static final double MAX_DT = 0.05;  // 50 ms
+    private static final double MIN_DT = 1e-3;
+    private static final double MAX_DT = 0.05;
 
     private static final double ENCODER_TICKS_PER_REV = 8192.0;
-
     private static final double GEAR_RATIO = 1.0;
+    private static final double TICKS_PER_DEGREE =
+            (ENCODER_TICKS_PER_REV * GEAR_RATIO) / 360.0;
 
-    private static final double TICKS_PER_DEGREE = (ENCODER_TICKS_PER_REV * GEAR_RATIO) / 360.0;
+    private static final double LEFT_LIMIT_DEG = -90.0;
+    private static final double RIGHT_LIMIT_DEG = 90.0;
 
-    private static final double LEFT_LIMIT_DEG = 0.0;
-    private static final double RIGHT_LIMIT_DEG = 355.0;
-
-    // Alternative options based on your needs:
-    // Full coverage with some wraparound: -30° to 390°
-    // Safe with lots of slack: -90° to 450°
-    // Conservative 270° range: 45° to 315°
-
-    private static final double POSITION_TOLERANCE_DEG = 2.0;
-
-    private double targetAngleDeg = 180.0;  // Start centered
+    private static final double HOLD_POWER = 0.09; // tune 0.03–0.06
+    private static final double CENTER_POWER = 0.25; // max power for centering
+    private static final double CENTER_TOLERANCE = 2.5; // degrees tolerance for center
+    private static final double CENTER_KP = 0.012; // Proportional gain (lower = smoother)
+    private static final double CENTER_KD = 0.008; // Derivative gain (damping)
 
     public TurretSubsystem(HardwareMap hw, String servoName, String encoderName, CameraSubsystem camera) {
-        this.turretServo = hw.crservo.get(servoName);
+        turretServo = hw.crservo.get(servoName);
 
-        this.turretEncoder = hw.get(DcMotorEx.class, encoderName);
-
+        turretEncoder = hw.get(DcMotorEx.class, encoderName);
+        turretEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         this.camera = camera;
-
-        turretState = TurretState.MANUAL;
-
-        // Set initial target to current position
-        targetAngleDeg = getTurretAngleDeg();
 
         Robot.getInstance().subsystems.add(this);
         lastNanos = System.nanoTime();
     }
 
-    public void setTurretState(TurretState newstate) {
-        this.turretState = newstate;
-        if (newstate == TurretState.MANUAL) {
+    /* ================= State ================= */
+
+    public void setTurretState(TurretState newState) {
+        turretState = newState;
+        resetPID();
+        if (newState == TurretState.MANUAL) {
             setTurretPower(0.0);
-        } else {
-            resetPID();
         }
     }
 
@@ -77,171 +77,154 @@ public class TurretSubsystem extends RE_SubsystemBase {
         return turretState;
     }
 
-    public void enableAutoAim(boolean enable) {
-        setTurretState(enable ? TurretState.AUTO_AIM : TurretState.MANUAL);
+    public boolean isTracking() {
+        return turretState == TurretState.TRACK;
     }
 
-    public void setTurretPower(double power) {
-        double currentAngle = getTurretAngleDeg();
-
-        // Enforce hard limits to protect cables
-        if (currentAngle <= LEFT_LIMIT_DEG && power < 0) {
-            power = 0.0;  // At left limit, prevent further left rotation
-        } else if (currentAngle >= RIGHT_LIMIT_DEG && power > 0) {
-            power = 0.0;  // At right limit, prevent further right rotation
-        }
-
-        turretServo.setPower(clamp(power, -1.0, 1.0));
+    public boolean isCentered() {
+        return Math.abs(getTurretAngleDeg()) < CENTER_TOLERANCE;
     }
 
-    public boolean isWithinLimits() {
-        double angle = getTurretAngleDeg();
-        return angle >= LEFT_LIMIT_DEG && angle <= RIGHT_LIMIT_DEG;
-    }
-
-    public boolean isNearLimit(double thresholdDeg) {
-        double angle = getTurretAngleDeg();
-        return (angle - LEFT_LIMIT_DEG < thresholdDeg) ||
-                (RIGHT_LIMIT_DEG - angle < thresholdDeg);
-    }
-
-    private double getShortestAngleDistance(double from, double to) {
-        double diff = to - from;
-
-        // Normalize to -180 to +180 range
-        while (diff > 180.0) diff -= 360.0;
-        while (diff < -180.0) diff += 360.0;
-
-        return diff;
-    }
-
-    private double normalizeAngle(double angleDeg) {
-        double normalized = angleDeg % 360.0;
-        if (normalized < 0) normalized += 360.0;
-        return normalized;
-    }
+    /* ================= Encoder ================= */
 
     public double getTurretAngleDeg() {
         return turretEncoder.getCurrentPosition() / TICKS_PER_DEGREE;
     }
 
-    public double getTargetAngleDeg() {
-        return targetAngleDeg;
-    }
-
-    public void setTargetAngle(double angleDeg) {
-        targetAngleDeg = clamp(angleDeg, LEFT_LIMIT_DEG, RIGHT_LIMIT_DEG);
-    }
-
-    public double getLeftLimitDeg() {
-        return LEFT_LIMIT_DEG;
-    }
-
-    public double getRightLimitDeg() {
-        return RIGHT_LIMIT_DEG;
-    }
-
-    public boolean isAtTarget(double toleranceDeg) {
-        return Math.abs(getTurretAngleDeg() - targetAngleDeg) < toleranceDeg;
-    }
-
-
-    public boolean isAtTarget() {
-        return isAtTarget(POSITION_TOLERANCE_DEG);
-    }
-
-
     public void resetEncoder() {
-
+        turretEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        resetPID();
     }
 
-    @Override
-    public void updateData() {
-        // Robot.getInstance().data.turretState = turretState.name();
-        // Robot.getInstance().data.turretAngleDeg = getTurretAngleDeg();
-        // Robot.getInstance().data.turretTargetAngleDeg = targetAngleDeg;
+    /* ================= Output ================= */
+
+    public void setTurretPower(double power) {
+        double angle = getTurretAngleDeg();
+
+        if (angle <= LEFT_LIMIT_DEG && power < 0) power = 0.0;
+        if (angle >= RIGHT_LIMIT_DEG && power > 0) power = 0.0;
+
+        turretServo.setPower(clamp(power, -1.0, 1.0));
     }
+
+    /* ================= Loop ================= */
 
     @Override
     public void periodic() {
-        if (turretState == TurretState.AUTO_AIM) {
-            runAutoAimPID();
+        camera.setCurrentCameraYaw(getTurretAngleDeg());
+
+        if (turretState == TurretState.TRACK) {
+            runTrackingPID();
+        } else if (turretState == TurretState.CENTER) {
+            centerTurret();
         }
     }
 
-    private void runAutoAimPID() {
+    /* ================= PID ================= */
+
+    private void runTrackingPID() {
         long now = System.nanoTime();
-        double dt = (now - lastNanos) / 1e9;
+        double dt = clamp((now - lastNanos) / 1e9, MIN_DT, MAX_DT);
         lastNanos = now;
 
-        if (dt < MIN_DT) dt = MIN_DT;
-        if (dt > MAX_DT) dt = MAX_DT;
-
         if (!camera.hasBasket()) {
-            setTurretPower(0.0);
-            targetAngleDeg = getTurretAngleDeg();
-            lastErrDeg = 0.0;
+            // No target - center the turret instead of scanning
+            centerTurret();
+            resetPID();
             return;
         }
-
-        double currentAngle = getTurretAngleDeg();
 
         double yawErrDeg = camera.getBasketYawDeg();
 
-        boolean atRightLimit = currentAngle >= RIGHT_LIMIT_DEG - 5.0;
-        boolean atLeftLimit = currentAngle <= LEFT_LIMIT_DEG + 5.0;
-
-        if (atRightLimit && yawErrDeg > 0) {
-
-            yawErrDeg = -(360.0 - Math.abs(yawErrDeg));
-        } else if (atLeftLimit && yawErrDeg < 0) {
-
-            yawErrDeg = 360.0 - Math.abs(yawErrDeg);
-        }
-
         if (Math.abs(yawErrDeg) < Constants.deadbandDeg) {
-            yawErrDeg = 0.0;
-            setTurretPower(0.0);
+            setTurretPower(Math.signum(lastErrDeg) * HOLD_POWER);
+            integral = 0.0;
             return;
         }
 
-        errFiltDeg = Constants.errAlpha * yawErrDeg + (1.0 - Constants.errAlpha) * errFiltDeg;
+        errFiltDeg =
+                Constants.errAlpha * yawErrDeg +
+                        (1.0 - Constants.errAlpha) * errFiltDeg;
 
         integral += errFiltDeg * dt;
-        if (yawErrDeg == 0.0) integral *= 0.5;
-        integral = clamp(integral, -Constants.maxIntegral, Constants.maxIntegral);
+        integral = clamp(integral,
+                -Constants.maxIntegral,
+                Constants.maxIntegral);
 
-        double deriv = (errFiltDeg - lastErrDeg) / dt;
-        deriv = clamp(deriv, -Constants.maxDeriv, Constants.maxDeriv);
+        // Calculate derivative, but skip on first measurement to prevent spike
+        double deriv = 0.0;
+        if (!firstMeasurement) {
+            deriv = (errFiltDeg - lastErrDeg) / dt;
+            deriv = clamp(deriv, -Constants.maxDeriv, Constants.maxDeriv);
+        }
+        firstMeasurement = false;
         lastErrDeg = errFiltDeg;
 
-        double rawPower =
+        double power =
                 Constants.kP_v * errFiltDeg +
                         Constants.kI_v * integral +
                         Constants.kD_v * deriv;
 
-        if (yawErrDeg != 0.0 && Constants.kS > 0) {
-            rawPower += Math.signum(errFiltDeg) * Constants.kS;
+        if (Constants.kS > 0) {
+            power += Math.signum(errFiltDeg) * Constants.kS;
         }
 
-        double maxPower = clamp(Constants.maxPower, 0.0, 1.0);
-        double power = clamp(rawPower, -maxPower, maxPower);
+        power = clamp(power,
+                -Constants.maxPower,
+                Constants.maxPower);
 
-        if (Math.abs(power) >= maxPower - 1e-6 && Math.signum(power) == Math.signum(rawPower)) {
-            integral *= 0.95;
+        if (Math.abs(power) >= Constants.maxPower) {
+            integral *= 0.9;
         }
-
-        targetAngleDeg = currentAngle - errFiltDeg;
 
         setTurretPower(power);
     }
+
+    /**
+     * Center the turret to 0 degrees using PD control
+     */
+    private void centerTurret() {
+        long now = System.nanoTime();
+        double dt = clamp((now - lastNanos) / 1e9, MIN_DT, MAX_DT);
+        lastNanos = now;
+
+        double currentAngle = getTurretAngleDeg();
+        double error = 0.0 - currentAngle; // Target is 0 degrees
+
+        // Check if we're close enough to center
+        if (Math.abs(error) < CENTER_TOLERANCE) {
+            setTurretPower(0.0);
+            firstCenterMeasurement = true; // Reset for next time
+            return;
+        }
+
+        // Calculate derivative (velocity damping)
+        double derivative = 0.0;
+        if (!firstCenterMeasurement) {
+            derivative = (currentAngle - lastCenterAngle) / dt;
+        }
+        firstCenterMeasurement = false;
+        lastCenterAngle = currentAngle;
+
+        // PD control: P moves toward target, D prevents overshoot
+        double power = (Constants.CENTER_KP * error) - (Constants.CENTER_KD * derivative);
+
+        // Clamp to max centering power
+        power = clamp(power, -CENTER_POWER, CENTER_POWER);
+
+        setTurretPower(power);
+    }
+
+    /* ================= Utils ================= */
 
     private void resetPID() {
         integral = 0.0;
         lastErrDeg = 0.0;
         errFiltDeg = 0.0;
+        firstMeasurement = true;
+        firstCenterMeasurement = true;
         lastNanos = System.nanoTime();
-        targetAngleDeg = getTurretAngleDeg();
     }
 
     private static double clamp(double v, double lo, double hi) {
