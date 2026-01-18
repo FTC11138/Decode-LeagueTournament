@@ -33,13 +33,13 @@ public class Robot {
     public Follower follower;
 
 
-//    public CameraSubsystem cameraSubsystem;
+    public CameraSubsystem cameraSubsystem;
 
     public TurretSubsystem turretSubsystem;
 
     public SpindexerTestSubsystem spindexerTestSubsystem;
 
-    public TurretOdometrySubsystem turretOdometrySubsystem;
+//    public TurretOdometrySubsystem turretOdometrySubsystem;
 
     public ShooterSubsystem shooterSubsystem;
 
@@ -64,16 +64,16 @@ public class Robot {
 
         subsystems = new ArrayList<>();
 
-//        cameraSubsystem = new CameraSubsystem(
-//                this.hardwareMap,
-//                names.limelight
-//        );
+        cameraSubsystem = new CameraSubsystem(
+                this.hardwareMap,
+                names.limelight
+        );
 
-        turretOdometrySubsystem = new TurretOdometrySubsystem(
+        turretSubsystem = new TurretSubsystem(
                 this.hardwareMap,
                 names.turretServo,
                 names.leftFront,
-                follower
+                cameraSubsystem
         );
 
         shooterSubsystem = new ShooterSubsystem(
@@ -87,17 +87,6 @@ public class Robot {
                 names.intakeMotor
         );
 
-//        spindexerSubsystem = new SpindexerSubsystem(
-//                this.hardwareMap,
-//                names.spindexerMotor,
-//                names.slot0SensorA,
-//                names.slot0SensorB,
-//                names.slot1SensorA,
-//                names.slot1SensorB,
-//                names.slot2SensorA,
-//                names.slot2SensorB,
-//                cameraSubsystem
-//        );
 
         spindexerTestSubsystem = new SpindexerTestSubsystem(
                 this.hardwareMap,
@@ -111,9 +100,9 @@ public class Robot {
 
     }
 
-//    public CameraSubsystem.Obelisk getObelisk() {
-//        return cameraSubsystem.getObelisk();
-//    }
+    public CameraSubsystem.Obelisk getObelisk() {
+        return cameraSubsystem.getObelisk();
+    }
 
 
 

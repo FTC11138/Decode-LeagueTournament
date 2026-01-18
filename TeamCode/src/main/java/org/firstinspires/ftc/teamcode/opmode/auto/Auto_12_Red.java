@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.hardware.Robot;
 import org.firstinspires.ftc.teamcode.hardware.RobotData;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
-import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
 
@@ -34,18 +34,21 @@ public class Auto_12_Red extends LinearOpMode {
     public static double startHeading = 90;
 
 
-    public static double shootX = 144 - 52;
-    public static double shootY = 85;
-    public static double shootHeading = 180 - 180;
+    public static double shootX = 144 - 50;
+    public static double shootY = 103;
+    public static double shootHeading = 180 - 139;
 
     public static double shoot0X = shootX;
     public static double shoot0Y = shootY;
     public static double shoot0Heading = shootHeading;
 
+    public static double intake11X = 90;
+    public static double intake11Y = 88;
+    public static double intake11Heading = 180 - 180;
 
-    public static double intake1X = 144 - 18;
-    public static double intake1Y = 85;
-    public static double intake1Heading = 180 - 180;
+    public static double intake12X = 144 - 18;
+    public static double intake12Y = 88;
+    public static double intake12Heading = 180 - 180;
 
 
     public static double shoot1X = shootX;
@@ -54,7 +57,7 @@ public class Auto_12_Red extends LinearOpMode {
 
 
     public static double intake21X = 144 - 47.5;
-    public static double intake21Y = 59;
+    public static double intake21Y = 64;
     public static double intake21Heading = 180 - 180;
 
     public static double intake22X = 144 - 10;
@@ -68,7 +71,7 @@ public class Auto_12_Red extends LinearOpMode {
 
 
     public static double intake31X = 144-47;
-    public static double intake31Y = 38;
+    public static double intake31Y = 42;
     public static double intake31Heading = 180 - 180;
 
     public static double intake32X = 144 - 10;
@@ -79,12 +82,18 @@ public class Auto_12_Red extends LinearOpMode {
     public static double shoot3Y = shootY;
     public static double shoot3Heading = shootHeading;
 
+    public static double moveX = 118;
+    public static double moveY = 72;
+    public static double moveHeading = 0;
+
+
 
 
 
 
     public static Path shoot0Path;
-    public static Path intake1Path;
+    public static Path intake11Path;
+    public static Path intake12Path;
     public static Path shoot1Path;
     public static Path intake21Path;
     public static Path intake22Path;
@@ -92,6 +101,7 @@ public class Auto_12_Red extends LinearOpMode {
     public static Path intake31Path;
     public static Path intake32Path;
     public static Path shoot3Path;
+    public static Path movePath;
 
 
 
@@ -99,7 +109,8 @@ public class Auto_12_Red extends LinearOpMode {
 
     public void buildPaths() {
         Pose shoot0Pose = new Pose(shoot0X, shoot0Y, Math.toRadians(shoot0Heading));
-        Pose intake1Pose = new Pose(intake1X, intake1Y, Math.toRadians(intake1Heading));
+        Pose intake12Pose = new Pose(intake12X, intake12Y, Math.toRadians(intake12Heading));
+        Pose intake11Pose = new Pose(intake11X, intake11Y, Math.toRadians(intake11Heading));
         Pose shoot1Pose = new Pose(shoot1X, shoot1Y, Math.toRadians(shoot1Heading));
         Pose intake21Pose = new Pose(intake21X, intake21Y, Math.toRadians(intake21Heading));
         Pose intake22Pose = new Pose(intake22X, intake22Y, Math.toRadians(intake22Heading));
@@ -107,6 +118,7 @@ public class Auto_12_Red extends LinearOpMode {
         Pose intake31Pose = new Pose(intake31X, intake31Y, Math.toRadians(intake31Heading));
         Pose intake32Pose = new Pose(intake32X, intake32Y, Math.toRadians(intake32Heading));
         Pose shoot3Pose = new Pose(shoot3X, shoot3Y, Math.toRadians(shoot3Heading));
+        Pose movePose = new Pose(moveX, moveY, Math.toRadians(moveHeading));
 
 
         Pose intake2PoseControl = new Pose(144 - 51.5, 55.7);
@@ -115,14 +127,16 @@ public class Auto_12_Red extends LinearOpMode {
 
 
         shoot0Path = buildPath(startPose, shoot0Pose, 0.5);
-        intake1Path = buildPath(shoot0Pose, intake1Pose, 0.05);
-        shoot1Path = buildPath(intake1Pose, shoot1Pose);
+        intake11Path = buildPath(shoot0Pose, intake11Pose, 0.05);
+        intake12Path = buildPath(intake11Pose, intake12Pose, 0.05);
+        shoot1Path = buildPath(intake12Pose, shoot1Pose);
         intake21Path = buildPath(shoot1Pose, intake21Pose);
         intake22Path = buildPath(intake21Pose, intake22Pose);
         shoot2Path = buildCurve(intake22Pose, shoot2Pose, intake2PoseControl);
         intake31Path = buildPath(shoot2Pose, intake31Pose);
         intake32Path = buildPath(intake31Pose, intake32Pose);
         shoot3Path = buildPath(intake32Pose, shoot3Pose);
+        movePath = buildPath(shoot3Pose, movePose);
 
 
 
@@ -135,13 +149,14 @@ public class Auto_12_Red extends LinearOpMode {
         Robot robot = Robot.getInstance();
         robot.data = new RobotData();
         Globals.IS_AUTO = true;
+        Globals.ALLIANCE = Globals.COLORS.RED;
         robot.initialize(hardwareMap, telemetry);
         CommandScheduler.getInstance().reset();
 
 
         buildPaths();
         Constants.ballDetectWait = Constants.ballDetectWaitAuto;
-        Constants.shootPower = -0.655;
+        Constants.shootPower = -0.62;
 
         robot.follower.setStartingPose(new Pose(startX, startY, Math.toRadians(startHeading)));
 
@@ -159,7 +174,7 @@ public class Auto_12_Red extends LinearOpMode {
                         new PathCommand(shoot0Path).alongWith(
                                 new SequentialCommandGroup(
                                         new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT),
-                                        new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
+                                        new TurretStateCommand(TurretSubsystem.TurretState.TRACK)
                                 )
                         ),
 
@@ -169,7 +184,8 @@ public class Auto_12_Red extends LinearOpMode {
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new WaitCommand(500),
-                        new PathCommand(intake1Path,0.5),
+                        new PathCommand(intake11Path),
+                        new PathCommand(intake12Path,0.5),
 
 
                         new WaitCommand(200),
@@ -201,7 +217,8 @@ public class Auto_12_Red extends LinearOpMode {
                         ),
                         new WaitCommand(600),
                         new ShooterStateCommand(ShooterSubsystem.ShooterState.STOP),
-                        new IntakeStateCommand(IntakeSubsystem.IntakeState.STOP)
+                        new IntakeStateCommand(IntakeSubsystem.IntakeState.STOP),
+                        new PathCommand(movePath)
                 )
         );
 

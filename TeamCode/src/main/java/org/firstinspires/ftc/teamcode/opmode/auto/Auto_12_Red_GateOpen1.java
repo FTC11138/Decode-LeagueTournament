@@ -10,6 +10,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.commands.drivecommand.PathCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.IntakeStateCommand;
@@ -22,33 +23,33 @@ import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
-
-@Autonomous(name = "Auto_12_Blue")
+@Disabled
+@Autonomous(name = "Auto_12_Red_GateOpen1")
 @Configurable
-public class Auto_12_Blue extends LinearOpMode {
+public class Auto_12_Red_GateOpen1 extends LinearOpMode {
 
 
 
-    public static double startX = 30;
+    public static double startX = 144 - 30;
     public static double startY = 134.5;
     public static double startHeading = 90;
 
 
-    public static double shootX = 50;
-    public static double shootY = 103;
-    public static double shootHeading = 139;
+    public static double shootX = 144 - 50;
+    public static double shootY = 98;
+    public static double shootHeading = 180 - 139;
 
     public static double shoot0X = shootX;
     public static double shoot0Y = shootY;
     public static double shoot0Heading = shootHeading;
 
-    public static double intake11X = 144 - 90;
-    public static double intake11Y = 87;
-    public static double intake11Heading = 180;
+    public static double intake11X = 90;
+    public static double intake11Y = 88;
+    public static double intake11Heading = 180 - 180;
 
-    public static double intake12X = 17;
-    public static double intake12Y = 87;
-    public static double intake12Heading = 180;
+    public static double intake12X = 144 - 18;
+    public static double intake12Y = 88;
+    public static double intake12Heading = 180 - 180;
 
 
     public static double shoot1X = shootX;
@@ -56,13 +57,22 @@ public class Auto_12_Blue extends LinearOpMode {
     public static double shoot1Heading = shootHeading;
 
 
-    public static double intake21X = 47.5;
-    public static double intake21Y = 62;
-    public static double intake21Heading = 180;
+    public static double intake21X = 144 - 47.5;
+    public static double intake21Y = 64;
+    public static double intake21Heading = 180 - 180;
 
-    public static double intake22X = 10;
+    public static double intake22X = 144 - 10;
     public static double intake22Y = intake21Y;
-    public static double intake22Heading = 180;
+    public static double intake22Heading = 180 - 180;
+
+    public static double gateX = 125;
+    public static double gateY = 71;
+    public static double gateHeading = 180 - 180;
+
+    public static double gateControlX = 88;
+    public static double gateControlY = 65;
+
+
 
 
     public static double shoot2X = shootX;
@@ -70,21 +80,21 @@ public class Auto_12_Blue extends LinearOpMode {
     public static double shoot2Heading = shootHeading;
 
 
-    public static double intake31X = 47;
-    public static double intake31Y = 39;
-    public static double intake31Heading = 180;
+    public static double intake31X = 144-47;
+    public static double intake31Y = 42;
+    public static double intake31Heading = 180 - 180;
 
-    public static double intake32X = 10;
+    public static double intake32X = 144 - 10;
     public static double intake32Y = intake31Y;
-    public static double intake32Heading = 180;
+    public static double intake32Heading = 180 - 180;
 
     public static double shoot3X = shootX;
     public static double shoot3Y = shootY;
     public static double shoot3Heading = shootHeading;
 
-    public static double moveX = 144 - 118;
+    public static double moveX = 112;
     public static double moveY = 72;
-    public static double moveHeading = 180 - 0;
+    public static double moveHeading = 0;
 
 
 
@@ -102,6 +112,7 @@ public class Auto_12_Blue extends LinearOpMode {
     public static Path intake32Path;
     public static Path shoot3Path;
     public static Path movePath;
+    public static Path gateOpenPath;
 
 
 
@@ -114,6 +125,7 @@ public class Auto_12_Blue extends LinearOpMode {
         Pose shoot1Pose = new Pose(shoot1X, shoot1Y, Math.toRadians(shoot1Heading));
         Pose intake21Pose = new Pose(intake21X, intake21Y, Math.toRadians(intake21Heading));
         Pose intake22Pose = new Pose(intake22X, intake22Y, Math.toRadians(intake22Heading));
+        Pose gatePose = new Pose(gateX, gateY, Math.toRadians(gateHeading));
         Pose shoot2Pose = new Pose(shoot2X, shoot2Y, Math.toRadians(shoot2Heading));
         Pose intake31Pose = new Pose(intake31X, intake31Y, Math.toRadians(intake31Heading));
         Pose intake32Pose = new Pose(intake32X, intake32Y, Math.toRadians(intake32Heading));
@@ -121,19 +133,23 @@ public class Auto_12_Blue extends LinearOpMode {
         Pose movePose = new Pose(moveX, moveY, Math.toRadians(moveHeading));
 
 
-        Pose intake2PoseControl = new Pose(51.5, 55.7);
+        Pose intake2PoseControl = new Pose(144 - 51.5, 55.7);
+
+
+        Pose gateControl = new Pose(gateControlX, gateControlY);
 
 
 
 
         shoot0Path = buildPath(startPose, shoot0Pose, 0.5);
-        intake11Path = buildPath(shoot0Pose, intake11Pose, 0.05);
+        intake21Path = buildPath(shoot0Pose, intake21Pose);
+        intake22Path = buildPath(intake21Pose, intake22Pose);
+        gateOpenPath = buildCurve(intake22Pose, gatePose, gateControl);
+        shoot2Path = buildCurve(gatePose, shoot2Pose, intake2PoseControl);
+        intake11Path = buildPath(shoot2Pose, intake11Pose, 0.05);
         intake12Path = buildPath(intake11Pose, intake12Pose, 0.05);
         shoot1Path = buildPath(intake12Pose, shoot1Pose);
-        intake21Path = buildPath(shoot1Pose, intake21Pose);
-        intake22Path = buildPath(intake21Pose, intake22Pose);
-        shoot2Path = buildCurve(intake22Pose, shoot2Pose, intake2PoseControl);
-        intake31Path = buildPath(shoot2Pose, intake31Pose);
+        intake31Path = buildPath(shoot1Pose, intake31Pose);
         intake32Path = buildPath(intake31Pose, intake32Pose);
         shoot3Path = buildPath(intake32Pose, shoot3Pose);
         movePath = buildPath(shoot3Pose, movePose);
@@ -149,14 +165,13 @@ public class Auto_12_Blue extends LinearOpMode {
         Robot robot = Robot.getInstance();
         robot.data = new RobotData();
         Globals.IS_AUTO = true;
-        Globals.ALLIANCE = Globals.COLORS.BLUE;
         robot.initialize(hardwareMap, telemetry);
         CommandScheduler.getInstance().reset();
 
 
         buildPaths();
         Constants.ballDetectWait = Constants.ballDetectWaitAuto;
-        Constants.shootPower = -0.62;
+        Constants.shootPower = -0.65;
 
         robot.follower.setStartingPose(new Pose(startX, startY, Math.toRadians(startHeading)));
 
@@ -174,7 +189,7 @@ public class Auto_12_Blue extends LinearOpMode {
                         new PathCommand(shoot0Path).alongWith(
                                 new SequentialCommandGroup(
                                         new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT),
-                                        new TurretStateCommand(TurretSubsystem.TurretState.TRACK)
+                                        new TurretStateCommand(TurretSubsystem.TurretState.CENTER)
                                 )
                         ),
 
@@ -198,6 +213,8 @@ public class Auto_12_Blue extends LinearOpMode {
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake21Path),
                         new PathCommand(intake22Path,0.47),
+
+                        new PathCommand(gateOpenPath),
 
                         new WaitCommand(200),
                         new PathCommand(shoot2Path).andThen(

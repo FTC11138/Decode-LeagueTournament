@@ -7,9 +7,9 @@ import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsyste
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 
 public class TurretStateCommand extends InstantCommand {
-    public TurretStateCommand(TurretOdometrySubsystem.TurretState state) {
+    public TurretStateCommand(TurretSubsystem.TurretState state) {
         super(
-                () -> Robot.getInstance().turretOdometrySubsystem.setTurretState(state)
+                () -> Robot.getInstance().turretSubsystem.setTurretState(state)
         );
     }
 }

@@ -1,143 +1,92 @@
-package org.firstinspires.ftc.teamcode.opmode;
+package org.firstinspires.ftc.teamcode.opmodes;
 
-import com.arcrobotics.ftclib.command.CommandOpMode;
-import com.arcrobotics.ftclib.command.CommandScheduler;
-import com.arcrobotics.ftclib.gamepad.GamepadEx;
-import com.arcrobotics.ftclib.gamepad.GamepadKeys;
-import com.pedropathing.geometry.Pose;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.hardware.Robot;
-import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Globals;
 
 @TeleOp(name = "Turret Test", group = "Test")
-public class TurretOdometryTuner extends CommandOpMode {
-
-    private final Robot robot = Robot.getInstance();
-    private GamepadEx g1;
-
-    // Target point you can nudge with dpad
-    private double targetX = 0;
-    private double targetY = 144;
-
-    // Button state tracking
-    private boolean lastA;
-    private boolean lastY;
+public class TurretOdometryTuner extends LinearOpMode {
 
     @Override
-    public void initialize() {
-        g1 = new GamepadEx(gamepad1);
+    public void runOpMode() throws InterruptedException {
 
+        // Set alliance (IMPORTANT!)
+        Globals.ALLIANCE = Globals.COLORS.BLUE; // Change to RED if needed
         Globals.IS_AUTO = false;
 
-        // Initialize robot using your standard method
+        // Initialize Robot (this creates all subsystems)
+        Robot robot = Robot.getInstance();
         robot.initialize(hardwareMap, telemetry);
 
-        // Optional: Set a starting pose if needed
-        robot.follower.setStartingPose(new Pose(72, 72, Math.toRadians(90)));
-
-        telemetry.addLine("Turret Test Ready!");
-        telemetry.addLine("A = Toggle Auto Track");
-        telemetry.addLine("Y = Zero Encoder");
-        telemetry.addLine("Left Stick X = Manual Control");
-        telemetry.addLine("Dpad = Nudge Target");
+        telemetry.addLine("Turret Test OpMode");
+        telemetry.addLine("================");
+        telemetry.addLine("Controls:");
+        telemetry.addLine("  Left Stick X: Manual turret control");
+        telemetry.addLine("  A: Enable TRACK mode");
+        telemetry.addLine("  B: Enable MANUAL mode");
+        telemetry.addLine("  X: Reset encoder");
+        telemetry.addLine("");
+        telemetry.addLine("Press START when ready");
         telemetry.update();
-    }
 
-    @Override
-    public void run() {
-        // Update command scheduler
-        CommandScheduler.getInstance().run();
+        waitForStart();
 
-        // Update robot systems
-        robot.periodic();
-        robot.updateData();
-        robot.write();
+        while (opModeIsActive()) {
 
-        // Read buttons
-        boolean a = g1.getButton(GamepadKeys.Button.A);
-        boolean y = g1.getButton(GamepadKeys.Button.Y);
+            // ========== CONTROLS ==========
 
-        // Toggle tracking with A button
-        if (a && !lastA) {
-            if (robot.turretOdometrySubsystem.getTurretState() == TurretOdometrySubsystem.TurretState.MANUAL) {
-                robot.turretOdometrySubsystem.setTurretState(TurretOdometrySubsystem.TurretState.TRACK_POINT);
-                gamepad1.rumble(200);
-            } else {
-                robot.turretOdometrySubsystem.setTurretState(TurretOdometrySubsystem.TurretState.MANUAL);
-                gamepad1.rumble(100);
-            }
-        }
-
-        // Zero encoder with Y button
-        if (y && !lastY) {
-//            robot.turretOdometrySubsystem.zeroTurretEncoderAtStart();
-            gamepad1.rumble(300);
-        }
-
-        // Update button states
-        lastA = a;
-        lastY = y;
-
-        // Nudge target point with dpad
-        double step = gamepad1.left_bumper ? 0.25 : 1.0; // Fine adjust with left bumper
-
-        if (gamepad1.dpad_up) targetY += step;
-        if (gamepad1.dpad_down) targetY -= step;
-        if (gamepad1.dpad_right) targetX += step;
-        if (gamepad1.dpad_left) targetX -= step;
-
-        robot.turretOdometrySubsystem.setTargetPoint(targetX, targetY);
-
-        // Manual control when in MANUAL mode
-        if (robot.turretOdometrySubsystem.getTurretState() == TurretOdometrySubsystem.TurretState.MANUAL) {
-            double manual = gamepad1.left_stick_x;
-
-            // Deadband
-            if (Math.abs(manual) < 0.05) {
-                manual = 0.0;
+            // Toggle between MANUAL and TRACK modes
+            if (gamepad1.a) {
+                robot.turretSubsystem.setTurretState(TurretSubsystem.TurretState.TRACK);
             }
 
-            // Scale for safety
-            manual *= 0.5;
+            if (gamepad1.b) {
+                robot.turretSubsystem.setTurretState(TurretSubsystem.TurretState.MANUAL);
+            }
 
-            robot.turretOdometrySubsystem.setTurretPower(manual);
+            // Manual control with left stick
+            if (robot.turretSubsystem.getTurretState() == TurretSubsystem.TurretState.MANUAL) {
+                double manualPower = -gamepad1.left_stick_x * 0.5; // Negative for intuitive control
+                robot.turretSubsystem.setTurretPower(manualPower);
+            }
+
+            // Reset encoder
+            if (gamepad1.x) {
+//                robot.turretSubsystem.resetEncoder();
+                sleep(200); // Debounce
+            }
+
+            // ========== UPDATE SUBSYSTEMS ==========
+            robot.periodic();      // Updates all subsystems
+            robot.updateData();    // Updates telemetry data
+
+            // ========== TELEMETRY ==========
+            telemetry.addData("Mode", robot.turretSubsystem.getTurretState());
+            telemetry.addData("", "");
+
+            telemetry.addData("Current Angle", "%.2f°", robot.turretSubsystem.getTurretAngleDeg());
+            telemetry.addData("", "");
+
+            telemetry.addData("Camera Sees Basket?", robot.cameraSubsystem.hasBasket() ? "YES" : "NO");
+            if (robot.cameraSubsystem.hasBasket()) {
+                telemetry.addData("Basket Yaw Error", "%.2f°", robot.cameraSubsystem.getBasketYawDeg());
+                telemetry.addData("Distance", "%.2f m", robot.cameraSubsystem.getBasketDistanceM());
+                telemetry.addData("In Range?", robot.cameraSubsystem.getShootDistance());
+            }
+            telemetry.addData("", "");
+
+            telemetry.addData("Obelisk", robot.cameraSubsystem.getObelisk());
+            telemetry.addData("", "");
+
+            telemetry.addLine("Controls:");
+            telemetry.addLine("  Left Stick X: Manual control");
+            telemetry.addLine("  A: TRACK mode | B: MANUAL mode");
+            telemetry.addLine("  X: Reset encoder");
+
+            telemetry.update();
         }
-
-        // Telemetry
-        Pose pose = robot.follower.getPose();
-        double angleDeg = robot.turretOdometrySubsystem.getTurretAngleDeg();
-
-        telemetry.addLine("=== TURRET ===");
-        telemetry.addData("Mode", robot.turretOdometrySubsystem.getTurretState());
-        telemetry.addData("Angle", "%.2f°", angleDeg);
-        telemetry.addData("Target (x,y)", "%.2f, %.2f", targetX, targetY);
-        telemetry.addData("RawTicks", robot.turretOdometrySubsystem.getRawTicks());
-        telemetry.addData("Power for Turret: ", robot.turretOdometrySubsystem.getTurretPower());
-        telemetry.addData("poseH", "%.1f", Math.toDegrees(pose.getHeading()));
-        telemetry.addData("angleToTargetField", "%.1f", Math.toDegrees(Math.atan2(targetY - pose.getY(), targetX - pose.getX())));
-        telemetry.addData("desiredTurret", "%.1f", robot.turretOdometrySubsystem.getDesiredTurretAngleDeg());
-        telemetry.addData("currentTurret", "%.1f", robot.turretOdometrySubsystem.getTurretAngleDeg());
-        telemetry.addData("err", "%.1f", robot.turretOdometrySubsystem.getTurretErrorDeg());
-
-        telemetry.addLine();
-        telemetry.addLine("=== ROBOT POSE ===");
-        if (pose != null) {
-            telemetry.addData("X", "%.2f", pose.getX());
-            telemetry.addData("Y", "%.2f", pose.getY());
-            telemetry.addData("Heading", "%.2f°", Math.toDegrees(pose.getHeading()));
-        } else {
-            telemetry.addLine("Pose: NULL");
-        }
-
-        telemetry.addLine();
-        telemetry.addLine("=== CONTROLS ===");
-        telemetry.addLine("A: Toggle Track | Y: Zero");
-        telemetry.addLine("Left Stick X: Manual");
-        telemetry.addLine("Dpad: Move Target | LB: Fine Adjust");
-
-
-        telemetry.update();
     }
 }
