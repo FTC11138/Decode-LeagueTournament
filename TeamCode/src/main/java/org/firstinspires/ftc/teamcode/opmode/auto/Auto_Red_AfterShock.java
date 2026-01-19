@@ -22,33 +22,42 @@ import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
+import org.firstinspires.ftc.teamcode.util.PoseStorage;
 
-@Autonomous(name = "Auto_12_Blue")
+@Autonomous(name = "Auto_12_Red_AfterShock")
 @Configurable
-public class Auto_12_Blue extends LinearOpMode {
+public class Auto_Red_AfterShock extends LinearOpMode {
 
 
 
-    public static double startX = 30;
+    public static double startX = 144 - 30;
     public static double startY = 134.5;
     public static double startHeading = 90;
 
 
-    public static double shootX = 50;
+    public static double shootX = 144 - 50;
     public static double shootY = 103;
-    public static double shootHeading = 139;
+    public static double shootHeading = 180 - 139;
 
     public static double shoot0X = shootX;
     public static double shoot0Y = shootY;
     public static double shoot0Heading = shootHeading;
 
-    public static double intake11X = 144 - 90;
-    public static double intake11Y = 87;
-    public static double intake11Heading = 180;
+    public static double intake11X = 90;
+    public static double intake11Y = 88;
+    public static double intake11Heading = 180 - 180;
 
-    public static double intake12X = 17;
-    public static double intake12Y = 87;
-    public static double intake12Heading = 180;
+    public static double intake12X = 144 - 18;
+    public static double intake12Y = 88;
+    public static double intake12Heading = 180 - 180;
+
+    public static double gateX = 127;
+    public static double gateY = 77;
+    public static double gateHeading = 90;
+
+
+    public static double gateControlX = 96;
+    public static double getGateControlY = 77;
 
 
     public static double shoot1X = shootX;
@@ -56,13 +65,13 @@ public class Auto_12_Blue extends LinearOpMode {
     public static double shoot1Heading = shootHeading;
 
 
-    public static double intake21X = 47.5;
-    public static double intake21Y = 62;
-    public static double intake21Heading = 180;
+    public static double intake21X = 144 - 47.5;
+    public static double intake21Y = 64;
+    public static double intake21Heading = 180 - 180;
 
-    public static double intake22X = 10;
+    public static double intake22X = 144 - 10;
     public static double intake22Y = intake21Y;
-    public static double intake22Heading = 180;
+    public static double intake22Heading = 180 - 180;
 
 
     public static double shoot2X = shootX;
@@ -70,21 +79,21 @@ public class Auto_12_Blue extends LinearOpMode {
     public static double shoot2Heading = shootHeading;
 
 
-    public static double intake31X = 47;
-    public static double intake31Y = 39;
-    public static double intake31Heading = 180;
+    public static double intake31X = 144-47;
+    public static double intake31Y = 42;
+    public static double intake31Heading = 180 - 180;
 
-    public static double intake32X = 10;
+    public static double intake32X = 144 - 10;
     public static double intake32Y = intake31Y;
-    public static double intake32Heading = 180;
+    public static double intake32Heading = 180 - 180;
 
     public static double shoot3X = shootX;
     public static double shoot3Y = shootY;
     public static double shoot3Heading = shootHeading;
 
-    public static double moveX = 144 - 108;
+    public static double moveX = 108;
     public static double moveY = 72;
-    public static double moveHeading = 180 - 0;
+    public static double moveHeading = 0;
 
 
 
@@ -94,6 +103,7 @@ public class Auto_12_Blue extends LinearOpMode {
     public static Path shoot0Path;
     public static Path intake11Path;
     public static Path intake12Path;
+    public static Path gateOpenPath;
     public static Path shoot1Path;
     public static Path intake21Path;
     public static Path intake22Path;
@@ -111,6 +121,7 @@ public class Auto_12_Blue extends LinearOpMode {
         Pose shoot0Pose = new Pose(shoot0X, shoot0Y, Math.toRadians(shoot0Heading));
         Pose intake12Pose = new Pose(intake12X, intake12Y, Math.toRadians(intake12Heading));
         Pose intake11Pose = new Pose(intake11X, intake11Y, Math.toRadians(intake11Heading));
+        Pose gatePose = new Pose(gateX, gateY, Math.toRadians(gateHeading));
         Pose shoot1Pose = new Pose(shoot1X, shoot1Y, Math.toRadians(shoot1Heading));
         Pose intake21Pose = new Pose(intake21X, intake21Y, Math.toRadians(intake21Heading));
         Pose intake22Pose = new Pose(intake22X, intake22Y, Math.toRadians(intake22Heading));
@@ -121,7 +132,9 @@ public class Auto_12_Blue extends LinearOpMode {
         Pose movePose = new Pose(moveX, moveY, Math.toRadians(moveHeading));
 
 
-        Pose intake2PoseControl = new Pose(51.5, 55.7);
+        Pose intake2PoseControl = new Pose(144 - 51.5, 55.7);
+
+        Pose gateControl = new Pose(gateControlX,getGateControlY);
 
 
 
@@ -129,14 +142,15 @@ public class Auto_12_Blue extends LinearOpMode {
         shoot0Path = buildPath(startPose, shoot0Pose, 0.5);
         intake11Path = buildPath(shoot0Pose, intake11Pose, 0.05);
         intake12Path = buildPath(intake11Pose, intake12Pose, 0.05);
-        shoot1Path = buildPath(intake12Pose, shoot1Pose);
+        gateOpenPath = buildCurve(intake12Pose, gatePose, gateControl,0.2);
+        shoot1Path = buildPath(gatePose, shoot1Pose);
         intake21Path = buildPath(shoot1Pose, intake21Pose);
         intake22Path = buildPath(intake21Pose, intake22Pose);
         shoot2Path = buildCurve(intake22Pose, shoot2Pose, intake2PoseControl);
         intake31Path = buildPath(shoot2Pose, intake31Pose);
         intake32Path = buildPath(intake31Pose, intake32Pose);
         shoot3Path = buildPath(intake32Pose, shoot3Pose);
-        movePath = buildPath(shoot3Pose, movePose);
+        movePath = buildPath(shoot2Pose, movePose);
 
 
 
@@ -149,7 +163,7 @@ public class Auto_12_Blue extends LinearOpMode {
         Robot robot = Robot.getInstance();
         robot.data = new RobotData();
         Globals.IS_AUTO = true;
-        Globals.ALLIANCE = Globals.COLORS.BLUE;
+        Globals.ALLIANCE = Globals.COLORS.RED;
         robot.initialize(hardwareMap, telemetry);
         CommandScheduler.getInstance().reset();
 
@@ -187,13 +201,14 @@ public class Auto_12_Blue extends LinearOpMode {
                         new PathCommand(intake11Path),
                         new PathCommand(intake12Path,0.5),
 
+                        new PathCommand(gateOpenPath),
 
                         new WaitCommand(200),
                         new PathCommand(shoot1Path).andThen(
                                 new WaitCommand(1000),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
-                        new WaitCommand(500),
+                        new WaitCommand(300),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake21Path),
@@ -204,20 +219,21 @@ public class Auto_12_Blue extends LinearOpMode {
                                 new WaitCommand(1000),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
-                        new WaitCommand(500),
-                        //Intake In
-                        new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
-                        new PathCommand(intake31Path),
-                        new PathCommand(intake32Path,0.47),
-
-                        new WaitCommand(200),
-                        new PathCommand(shoot3Path).andThen(
-                                new WaitCommand(1000),
-                                new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
-                        ),
-                        new WaitCommand(600),
-                        new ShooterStateCommand(ShooterSubsystem.ShooterState.STOP),
-                        new IntakeStateCommand(IntakeSubsystem.IntakeState.STOP),
+                        new WaitCommand(300),
+//                        new WaitCommand(300),
+//                        //Intake In
+//                        new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
+//                        new PathCommand(intake31Path),
+//                        new PathCommand(intake32Path,0.47),
+//
+//                        new WaitCommand(200),
+//                        new PathCommand(shoot3Path).andThen(
+//                                new WaitCommand(1000),
+//                                new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
+//                        ),
+//                        new WaitCommand(600),
+//                        new ShooterStateCommand(ShooterSubsystem.ShooterState.STOP),
+//                        new IntakeStateCommand(IntakeSubsystem.IntakeState.STOP)
                         new PathCommand(movePath)
                 )
         );
@@ -227,6 +243,7 @@ public class Auto_12_Blue extends LinearOpMode {
             robot.updateData();
             robot.periodic();
             robot.write();
+            PoseStorage.pose = robot.follower.getPose();
         }
     }
 }
