@@ -22,7 +22,7 @@ import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
 
-@TeleOp(name = "Solo RED")
+@TeleOp(name = "Solo RED 🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴")
 public class Tele_Op_Solo_Red extends Tele_Op_Solo_Test {
 
     @Override

@@ -22,6 +22,7 @@ import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
+import org.firstinspires.ftc.teamcode.util.PoseStorage;
 
 @Autonomous(name = "Auto_12_Red")
 @Configurable
@@ -82,7 +83,7 @@ public class Auto_12_Red extends LinearOpMode {
     public static double shoot3Y = shootY;
     public static double shoot3Heading = shootHeading;
 
-    public static double moveX = 118;
+    public static double moveX = 108;
     public static double moveY = 72;
     public static double moveHeading = 0;
 
@@ -156,7 +157,7 @@ public class Auto_12_Red extends LinearOpMode {
 
         buildPaths();
         Constants.ballDetectWait = Constants.ballDetectWaitAuto;
-        Constants.shootPower = -0.62;
+        Constants.shootPower = -0.645;
 
         robot.follower.setStartingPose(new Pose(startX, startY, Math.toRadians(startHeading)));
 
@@ -227,6 +228,7 @@ public class Auto_12_Red extends LinearOpMode {
             robot.updateData();
             robot.periodic();
             robot.write();
+            PoseStorage.pose = robot.follower.getPose();
         }
     }
 }

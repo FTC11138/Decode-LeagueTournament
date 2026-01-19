@@ -26,6 +26,7 @@ import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsyste
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
+import org.firstinspires.ftc.teamcode.util.PoseStorage;
 
 import kotlin.time.Instant;
 
@@ -51,8 +52,8 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
         Globals.IS_AUTO = false;
 
         robot.initialize(hardwareMap, telemetry);
-
-        robot.follower.setStartingPose(robot.data.currentPose);
+        CommandScheduler.getInstance().reset();
+//        robot.follower.setStartingPose(PoseStorage.pose);
 
         if (Globals.ALLIANCE == Globals.COLORS.RED){
             gamepad1.setLedColor(0, 0, 1, Gamepad.LED_DURATION_CONTINUOUS);
@@ -61,7 +62,8 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
             gamepad1.setLedColor(1, 0, 0, Gamepad.LED_DURATION_CONTINUOUS);
         }
 
-        Constants.shootPower = -0.65;
+        Constants.shootPower = -0.66;
+
 
         bindButtons();
     }
@@ -76,16 +78,15 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
 //                new InstantCommand(() -> robot.spindexerTestSubsystem.rotate360CCW())
 //        );
 
-        // Shooter control
-//        g1.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
-//                new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT)
-//        );
-
-        g1.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
+        g1.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(
                 new SequentialCommandGroup(
                         new InstantCommand(() -> robot.spindexerTestSubsystem.rotate15CW())
                 )
         );
+
+//        g1.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(
+//
+//        );
 
 //        g1.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(
 //                new SequentialCommandGroup(
