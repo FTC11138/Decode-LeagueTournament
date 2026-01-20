@@ -62,7 +62,7 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         this.turretEncoder = hw.get(DcMotorEx.class, encoderName);
         this.follower = follower;
 
-        if(Globals.IS_AUTO){
+        if (Globals.IS_AUTO){
             turretEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
 
@@ -391,7 +391,7 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         double desiredTurretAngleDeg = -55;
         desiredTurretAngleDeg = -55;
 
-        double currentTurretAngleDeg =  getTurretAngleDeg();
+        double currentTurretAngleDeg = getTurretAngleDeg();
 
         double errDeg = calculateSmartError(desiredTurretAngleDeg, currentTurretAngleDeg);
 
