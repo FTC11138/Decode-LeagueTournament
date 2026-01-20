@@ -62,7 +62,6 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
             gamepad1.setLedColor(1, 0, 0, Gamepad.LED_DURATION_CONTINUOUS);
         }
 
-        Constants.shootPower = -0.66;
 
 
         bindButtons();
