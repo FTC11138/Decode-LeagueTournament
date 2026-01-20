@@ -115,10 +115,6 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
             robot.updateData();
             robot.write();
 
-
-
-            gamepad1.setLedColor(0, 1, 0, 1000);
-
             robot.follower.setTeleOpDrive(
                     -gamepad1.left_stick_y * 1.4,
                     -gamepad1.left_stick_x * 1.4,
@@ -187,7 +183,11 @@ public class Tele_Op_Solo_Test extends CommandOpMode {
 
         // Touchpad: reset pose
         if (gamepad1.touchpad) {
-            robot.follower.setPose(new Pose());
+            robot.follower.setPose(new Pose(
+                    robot.follower.getPose().getX(),
+                    robot.follower.getPose().getY(),
+                    Globals.ALLIANCE == Globals.COLORS.BLUE ? Math.toRadians(0) : Math.toRadians(180)
+            ));
             gamepad1.rumble(500);
             gamepad1.setLedColor(0, 1, 0, 1000);
         }

@@ -22,6 +22,7 @@ import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
+import org.firstinspires.ftc.teamcode.util.PoseStorage;
 
 @Autonomous(name = "Auto_12_Blue")
 @Configurable
@@ -227,6 +228,7 @@ public class Auto_12_Blue extends LinearOpMode {
             robot.updateData();
             robot.periodic();
             robot.write();
+            PoseStorage.pose = robot.follower.getPose();
         }
     }
 }
