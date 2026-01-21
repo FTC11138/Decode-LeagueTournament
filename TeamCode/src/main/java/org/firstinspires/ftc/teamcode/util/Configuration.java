@@ -19,6 +19,8 @@ public class Configuration {
 
     public final String intakeMotor = "intakeMotor";
 
+    public final String adjHood = "hoodServo";
+
     public final String spindexerServo = "spindexerServo";
 
     public final String spindexerEncoder = "spindexerEncoder";

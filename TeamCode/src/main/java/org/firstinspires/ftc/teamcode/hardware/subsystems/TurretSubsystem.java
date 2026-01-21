@@ -9,11 +9,24 @@ import org.firstinspires.ftc.teamcode.hardware.Robot;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;
 
+/**
+ * TurretSubsystem:
+ *  - If camera sees the april tag target -> use camera yaw PID (UNCHANGED behavior)
+ *  - If camera does NOT see the target -> use TurretOdometrySubsystem's desired angle and hold to it
+ *  - If odometry pose is unavailable -> center
+ *
+ * IMPORTANT:
+ *  - TurretOdometrySubsystem must NOT drive the servo at the same time.
+ *    (With the version I gave you, outputsEnabled defaults to false, so you're safe.)
+ */
 public class TurretSubsystem extends RE_SubsystemBase {
 
     private final CRServo turretServo;
     private final DcMotorEx turretEncoder;
     private final CameraSubsystem camera;
+
+    // NEW: used only as a desired-angle provider when the tag is not visible
+    private final TurretOdometrySubsystem turretOdom;
 
     private double integral = 0.0;
     private double lastErrDeg = 0.0;
@@ -24,6 +37,10 @@ public class TurretSubsystem extends RE_SubsystemBase {
     // Center PD state
     private double lastCenterAngle = 0.0;
     private boolean firstCenterMeasurement = true;
+
+    // Track source switching to avoid derivative/integral spikes when we swap sources
+    private enum TrackSource { VISION, ODOM, NONE }
+    private TrackSource lastSource = TrackSource.NONE;
 
     public enum TurretState {
         MANUAL,
@@ -44,13 +61,19 @@ public class TurretSubsystem extends RE_SubsystemBase {
     private static final double LEFT_LIMIT_DEG = -90.0;
     private static final double RIGHT_LIMIT_DEG = 90.0;
 
-    private static final double HOLD_POWER = 0.09; // tune 0.03–0.06
+    private static final double HOLD_POWER = 0.09; // tune 0.03–0.06 if needed
     private static final double CENTER_POWER = 0.25; // max power for centering
     private static final double CENTER_TOLERANCE = 2.5; // degrees tolerance for center
-    private static final double CENTER_KP = 0.012; // Proportional gain (lower = smoother)
-    private static final double CENTER_KD = 0.008; // Derivative gain (damping)
+    private static final double CENTER_KP = 0.012; // Proportional gain
+    private static final double CENTER_KD = 0.008; // Derivative gain
 
-    public TurretSubsystem(HardwareMap hw, String servoName, String encoderName, CameraSubsystem camera) {
+    public TurretSubsystem(
+            HardwareMap hw,
+            String servoName,
+            String encoderName,
+            CameraSubsystem camera,
+            TurretOdometrySubsystem turretOdom
+    ) {
         turretServo = hw.crservo.get(servoName);
 
         turretEncoder = hw.get(DcMotorEx.class, encoderName);
@@ -58,6 +81,12 @@ public class TurretSubsystem extends RE_SubsystemBase {
         turretEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         this.camera = camera;
+        this.turretOdom = turretOdom;
+
+        // Safety: ensure odom subsystem doesn't fight for servo output (works with the version I gave you)
+        if (this.turretOdom != null) {
+            this.turretOdom.setOutputsEnabled(false);
+        }
 
         Robot.getInstance().subsystems.add(this);
         lastNanos = System.nanoTime();
@@ -68,6 +97,8 @@ public class TurretSubsystem extends RE_SubsystemBase {
     public void setTurretState(TurretState newState) {
         turretState = newState;
         resetPID();
+        lastSource = TrackSource.NONE;
+
         if (newState == TurretState.MANUAL) {
             setTurretPower(0.0);
         }
@@ -112,29 +143,56 @@ public class TurretSubsystem extends RE_SubsystemBase {
 
     @Override
     public void periodic() {
+        // keep this exactly as you had it
         camera.setCurrentCameraYaw(getTurretAngleDeg());
 
         if (turretState == TurretState.TRACK) {
-            runTrackingPID();
+            runHybridTrackingPID();
         } else if (turretState == TurretState.CENTER) {
+            lastSource = TrackSource.NONE;
             centerTurret();
         }
     }
 
-    /* ================= PID ================= */
+    /* ================= Hybrid Tracking ================= */
 
-    private void runTrackingPID() {
+    private void runHybridTrackingPID() {
         long now = System.nanoTime();
         double dt = clamp((now - lastNanos) / 1e9, MIN_DT, MAX_DT);
         lastNanos = now;
 
-        if (!camera.hasBasket()) {
-            // No target - center the turret instead of scanning
-            centerTurret();
-            resetPID();
+        // 1) If camera target is visible, do your original camera tracking behavior
+        if (camera.hasBasket()) {
+            if (lastSource != TrackSource.VISION) {
+                resetPID(); // prevents spikes when switching sources
+                lastSource = TrackSource.VISION;
+            }
+            runCameraTrackingPID(dt);
             return;
         }
 
+        // 2) If camera target isn't visible, use odometry desired angle
+        if (turretOdom != null && turretOdom.hasPose()) {
+            if (lastSource != TrackSource.ODOM) {
+                resetPID();
+                lastSource = TrackSource.ODOM;
+            }
+            double desiredDeg = turretOdom.getDesiredTurretAngleDeg(); // relative-to-robot
+            runOdomAngleHoldPID(dt, desiredDeg);
+            return;
+        }
+
+        // 3) If no vision and no odom pose, center
+        if (lastSource != TrackSource.NONE) {
+            resetPID();
+            lastSource = TrackSource.NONE;
+        }
+        centerTurret();
+    }
+
+    /* ================= Camera PID (UNCHANGED behavior) ================= */
+
+    private void runCameraTrackingPID(double dt) {
         double yawErrDeg = camera.getBasketYawDeg();
 
         if (Math.abs(yawErrDeg) < Constants.deadbandDeg) {
@@ -152,7 +210,60 @@ public class TurretSubsystem extends RE_SubsystemBase {
                 -Constants.maxIntegral,
                 Constants.maxIntegral);
 
-        // Calculate derivative, but skip on first measurement to prevent spike
+        // derivative (skip on first measurement)
+        double deriv = 0.0;
+        if (!firstMeasurement) {
+            deriv = (errFiltDeg - lastErrDeg) / dt;
+            deriv = clamp(deriv, -Constants.maxDeriv, Constants.maxDeriv);
+        }
+        firstMeasurement = false;
+        lastErrDeg = errFiltDeg;
+
+        double power =
+                Constants.kP_v * errFiltDeg +
+                        Constants.kI_v * integral +
+                        Constants.kD_v * deriv;
+
+        if (Constants.kS > 0) {
+            power += Math.signum(errFiltDeg) * Constants.kS;
+        }
+
+        power = clamp(power,
+                -Constants.maxPower,
+                Constants.maxPower);
+
+        if (Math.abs(power) >= Constants.maxPower) {
+            integral *= 0.9;
+        }
+
+        setTurretPower(power);
+    }
+
+    /* ================= Odom fallback PID (new) ================= */
+
+    private void runOdomAngleHoldPID(double dt, double desiredTurretAngleDeg) {
+        double currentDeg = getTurretAngleDeg();
+
+        // Use wrapped error so we choose the shortest direction
+        double errDeg = normalizeAngle(desiredTurretAngleDeg - currentDeg);
+
+        // CHANGE TO THIS IF DOESNT WORK: double errDeg = normalizeAngle(currentDeg - desiredTurretAngleDeg);
+
+        if (Math.abs(errDeg) < Constants.deadbandDeg) {
+            setTurretPower(0.0);
+            integral = 0.0;
+            return;
+        }
+
+        errFiltDeg =
+                Constants.errAlpha * errDeg +
+                        (1.0 - Constants.errAlpha) * errFiltDeg;
+
+        integral += errFiltDeg * dt;
+        integral = clamp(integral,
+                -Constants.maxIntegral,
+                Constants.maxIntegral);
+
         double deriv = 0.0;
         if (!firstMeasurement) {
             deriv = (errFiltDeg - lastErrDeg) / dt;
@@ -192,14 +303,12 @@ public class TurretSubsystem extends RE_SubsystemBase {
         double currentAngle = getTurretAngleDeg();
         double error = 0.0 - currentAngle; // Target is 0 degrees
 
-        // Check if we're close enough to center
         if (Math.abs(error) < CENTER_TOLERANCE) {
             setTurretPower(0.0);
-            firstCenterMeasurement = true; // Reset for next time
+            firstCenterMeasurement = true;
             return;
         }
 
-        // Calculate derivative (velocity damping)
         double derivative = 0.0;
         if (!firstCenterMeasurement) {
             derivative = (currentAngle - lastCenterAngle) / dt;
@@ -207,10 +316,7 @@ public class TurretSubsystem extends RE_SubsystemBase {
         firstCenterMeasurement = false;
         lastCenterAngle = currentAngle;
 
-        // PD control: P moves toward target, D prevents overshoot
-        double power = (Constants.CENTER_KP * error) - (Constants.CENTER_KD * derivative);
-
-        // Clamp to max centering power
+        double power = (CENTER_KP * error) - (CENTER_KD * derivative);
         power = clamp(power, -CENTER_POWER, CENTER_POWER);
 
         setTurretPower(power);
@@ -223,8 +329,19 @@ public class TurretSubsystem extends RE_SubsystemBase {
         lastErrDeg = 0.0;
         errFiltDeg = 0.0;
         firstMeasurement = true;
+
         firstCenterMeasurement = true;
         lastNanos = System.nanoTime();
+    }
+
+    private static double normalizeAngle(double angleDeg) {
+        angleDeg = angleDeg % 360.0;
+        if (angleDeg > 180.0) {
+            angleDeg -= 360.0;
+        } else if (angleDeg < -180.0) {
+            angleDeg += 360.0;
+        }
+        return angleDeg;
     }
 
     private static double clamp(double v, double lo, double hi) {
