@@ -39,7 +39,7 @@ public class Robot {
 
     public SpindexerTestSubsystem spindexerTestSubsystem;
 
-//    public TurretOdometrySubsystem turretOdometrySubsystem;
+    public TurretOdometrySubsystem turretOdometrySubsystem;
 
     public ShooterSubsystem shooterSubsystem;
 
@@ -69,17 +69,26 @@ public class Robot {
                 names.limelight
         );
 
+        turretOdometrySubsystem = new TurretOdometrySubsystem(
+                this.hardwareMap,
+                names.turretServo,
+                names.leftFront,
+                this.follower
+        );
+
         turretSubsystem = new TurretSubsystem(
                 this.hardwareMap,
                 names.turretServo,
                 names.leftFront,
-                cameraSubsystem
+                cameraSubsystem,
+                turretOdometrySubsystem
         );
 
         shooterSubsystem = new ShooterSubsystem(
                 this.hardwareMap,
                 names.shootMotor1,
-                names.shootMotor2
+                names.shootMotor2,
+                names.adjHood
         );
 
         intakeSubsystem = new IntakeSubsystem(
