@@ -58,10 +58,10 @@ public class TurretSubsystem extends RE_SubsystemBase {
     private static final double TICKS_PER_DEGREE =
             (ENCODER_TICKS_PER_REV * GEAR_RATIO) / 360.0;
 
-    private static final double LEFT_LIMIT_DEG = -90.0;
-    private static final double RIGHT_LIMIT_DEG = 90.0;
+    private static final double LEFT_LIMIT_DEG = -60.0;
+    private static final double RIGHT_LIMIT_DEG = 60.0;
 
-    private static final double HOLD_POWER = 0.09; // tune 0.03–0.06 if needed
+    private static final double HOLD_POWER = 0.1; // tune 0.03–0.06 if needed
     private static final double CENTER_POWER = 0.25; // max power for centering
     private static final double CENTER_TOLERANCE = 2.5; // degrees tolerance for center
     private static final double CENTER_KP = 0.012; // Proportional gain
