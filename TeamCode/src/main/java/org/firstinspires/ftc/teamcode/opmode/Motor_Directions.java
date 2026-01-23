@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.util.Configuration;
-
+@Disabled
 @TeleOp(name = "Motor Directions Tester", group = "Test")
 public class Motor_Directions extends OpMode {
     private DcMotor frontLeftMotor;
