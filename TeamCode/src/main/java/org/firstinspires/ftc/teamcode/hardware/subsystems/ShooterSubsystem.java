@@ -17,16 +17,16 @@ public class ShooterSubsystem extends RE_SubsystemBase {
     private final Servo adjHood;
 
     public enum ShooterState {
-        LOWERPOWER,
-        SHOOT,
+        MANUAL,
+        AUTO,
         STOP
     }
 
     // ✅ keep same names
     public enum AdjHoodState {
-        NOTMOVING,
-        SHOOTING,
-        MANUAL
+        MANUAL,
+        AUTO,
+        NONE,
     }
 
     Robot robot = Robot.getInstance();
@@ -47,19 +47,8 @@ public class ShooterSubsystem extends RE_SubsystemBase {
 
     private double dist = 0.0;
 
-    // Manual hood target
-    private double manualHoodPos = 0.5;
+    private double hoodPos = 0;
 
-    // Manual shooter target (TPS)
-    private boolean manualShooterEnabled = false;
-    private double manualShooterTPS = 0.0;
-
-    // ✅ HARD LOCK for tuning (prevents other commands from overriding)
-    private boolean tuningLock = false;
-
-    /* =====================
-       EXISTING METHODS (UNCHANGED)
-       ===================== */
 
     public static double flywheelSpeed(double goalDist) {
         return MathFunctions.clamp(
@@ -90,7 +79,8 @@ public class ShooterSubsystem extends RE_SubsystemBase {
         initMotor(shooterMotor2);
 
         shooterState = ShooterState.STOP;
-        adjHoodState = AdjHoodState.NOTMOVING;
+        adjHoodState = AdjHoodState.NONE;
+        hoodPos = Constants.adjHoodMin;
 
         Robot.getInstance().subsystems.add(this);
     }
@@ -100,76 +90,41 @@ public class ShooterSubsystem extends RE_SubsystemBase {
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-    // ✅ If tuning lock is enabled, ignore state updates from other commands
     public void updateShooterState(ShooterState newState) {
-        if (tuningLock) return;
         shooterState = newState;
     }
 
     public void updateAdjHoodState(AdjHoodState newState) {
-        if (tuningLock) return;
         adjHoodState = newState;
     }
 
-    /* =====================
-       ✅ TUNING LOCK API
-       ===================== */
-
-    public void enableTuningLock() {
-        tuningLock = true;
-        // force safe defaults while locked
+    public void setHoodPos(double pos) {
         adjHoodState = AdjHoodState.MANUAL;
-        shooterState = ShooterState.STOP;
+        hoodPos = pos;
     }
 
-    public void disableTuningLock() {
-        tuningLock = false;
-    }
-
-    public boolean isTuningLockEnabled() {
-        return tuningLock;
-    }
-
-    /* =====================
-       ✅ MANUAL HOOD API
-       ===================== */
-
-    public void setManualHoodPos(double pos) {
-        manualHoodPos = clamp01(pos);
-    }
-
-    public double getManualHoodPos() {
-        return manualHoodPos;
-    }
-
-    /* =====================
-       ✅ MANUAL SHOOTER API (TPS)
-       ===================== */
-
-    public void setManualShooterTPS(double tps) {
-        manualShooterEnabled = true;
-        manualShooterTPS = tps;
-    }
-
-    public void disableManualShooterTPS() {
-        manualShooterEnabled = false;
-    }
-
-    public boolean isManualShooterEnabled() {
-        return manualShooterEnabled;
-    }
-
-    public double getManualShooterTPS() {
-        return manualShooterTPS;
+    public void setShooterSpeed(double speed) {
+        shooterState = ShooterState.MANUAL;
+        targetVelocity = speed;
     }
 
     private double clamp01(double x) {
         return Math.max(0.0, Math.min(1.0, x));
     }
 
-    /* =====================
-       PERIODIC
-       ===================== */
+    @Override
+    public void updateData() {
+        Robot robot = Robot.getInstance();
+
+        robot.data.shooterState = shooterState;
+        robot.data.hoodState = adjHoodState;
+        robot.data.shooterTargetVelocity = getTargetVelocity();
+        robot.data.shooterCurrentVelocity1 = getCurrentVelocity1();
+        robot.data.shooterCurrentVelocity2 = getCurrentVelocity2();
+        robot.data.shooterCurrentRPM1 = getCurrentRPM1();
+        robot.data.shooterCurrentRPM2 = getCurrentRPM2();
+        robot.data.hoodPos = getHoodPos();
+    }
 
     @Override
     public void periodic() {
@@ -178,44 +133,15 @@ public class ShooterSubsystem extends RE_SubsystemBase {
                 .turretOdometrySubsystem
                 .getDist();
 
-        // ✅ If tuning lock is on, FORCE manual behavior here.
-        if (tuningLock) {
-            // Shooter: only runs if you put state to SHOOT in tuning opmode
-            if (shooterState == ShooterState.SHOOT) {
-                targetVelocity = manualShooterEnabled ? manualShooterTPS : 0.0;
-                shooterMotor1.setVelocity(targetVelocity);
-                shooterMotor2.setVelocity(targetVelocity);
-            } else {
-                shooterMotor1.setPower(0);
-                shooterMotor2.setPower(0);
-                targetVelocity = 0;
-            }
-
-            // Hood: always manual when locked
-            adjHood.setPosition(manualHoodPos);
-
-            currentVelocity1 = shooterMotor1.getVelocity();
-            currentVelocity2 = shooterMotor2.getVelocity();
-            currentRPM1 = (currentVelocity1 / TICKS_PER_REV) * 60.0;
-            currentRPM2 = (currentVelocity2 / TICKS_PER_REV) * 60.0;
-            return;
-        }
-
         // Shooter control (UNCHANGED)
         switch (shooterState) {
-            case LOWERPOWER:
-                targetVelocity =
-                        Constants.lowerShootPower * MAX_TICKS_PER_SECOND;
+            case MANUAL:
                 shooterMotor1.setVelocity(targetVelocity);
                 shooterMotor2.setVelocity(targetVelocity);
                 break;
-
-            case SHOOT:
-                targetVelocity = manualShooterEnabled ? manualShooterTPS : flywheelSpeed(dist);
-                shooterMotor1.setVelocity(targetVelocity);
-                shooterMotor2.setVelocity(targetVelocity);
-                break;
-
+            case AUTO:
+                shooterMotor1.setVelocity(flywheelSpeed(dist));
+                shooterMotor2.setVelocity(flywheelSpeed(dist));
             case STOP:
                 shooterMotor1.setPower(0);
                 shooterMotor2.setPower(0);
@@ -225,18 +151,16 @@ public class ShooterSubsystem extends RE_SubsystemBase {
         // Hood control (one writer)
         switch (adjHoodState) {
             case MANUAL:
-                adjHood.setPosition(manualHoodPos);
+                adjHood.setPosition(MathFunctions.clamp(hoodPos, Constants.adjHoodMax, Constants.adjHoodMin));
                 break;
-
-            case SHOOTING:
-                adjHood.setPosition(adjHoodPos(this.dist));
+            case AUTO:
+                adjHood.setPosition(adjHoodPos(dist));
                 break;
-
-            case NOTMOVING:
-            default:
-                adjHood.setPosition(0.0);
+            case NONE:
+                adjHood.setPosition(Constants.adjHoodMin);
                 break;
         }
+
 
         currentVelocity1 = shooterMotor1.getVelocity();
         currentVelocity2 = shooterMotor2.getVelocity();
@@ -244,20 +168,12 @@ public class ShooterSubsystem extends RE_SubsystemBase {
         currentRPM2 = (currentVelocity2 / TICKS_PER_REV) * 60.0;
     }
 
-    /* =====================
-       GETTERS (UNCHANGED)
-       ===================== */
 
     public double getCurrentVelocity1() { return currentVelocity1; }
     public double getCurrentVelocity2() { return currentVelocity2; }
     public double getCurrentRPM1() { return currentRPM1; }
     public double getCurrentRPM2() { return currentRPM2; }
     public double getTargetVelocity() { return targetVelocity; }
+    public double getHoodPos() { return hoodPos; }
 
-    public void stopShooter() {
-        targetVelocity = 0;
-        shooterState = ShooterState.STOP;
-        shooterMotor1.setPower(0);
-        shooterMotor2.setPower(0);
-    }
 }

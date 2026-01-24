@@ -187,7 +187,7 @@ public class Auto_Red_AfterShock extends LinearOpMode {
                 new SequentialCommandGroup(
                         new PathCommand(shoot0Path).alongWith(
                                 new SequentialCommandGroup(
-                                        new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT),
+                                        new ShooterStateCommand(ShooterSubsystem.ShooterState.AUTO),
                                         new TurretStateCommand(TurretSubsystem.TurretState.TRACK)
                                 )
                         ),
