@@ -4,6 +4,6 @@ import com.pedropathing.geometry.Pose;
 
 public class PoseStorage {
 
-    public static Pose pose = new Pose(0, 0, 0);
+    public static Pose pose = new Pose(72, 72, 0);
 
 }
