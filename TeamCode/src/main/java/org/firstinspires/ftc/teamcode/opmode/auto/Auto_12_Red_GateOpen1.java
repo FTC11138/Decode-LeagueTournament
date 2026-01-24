@@ -188,7 +188,7 @@ public class Auto_12_Red_GateOpen1 extends LinearOpMode {
                 new SequentialCommandGroup(
                         new PathCommand(shoot0Path).alongWith(
                                 new SequentialCommandGroup(
-                                        new ShooterStateCommand(ShooterSubsystem.ShooterState.SHOOT),
+                                        new ShooterStateCommand(ShooterSubsystem.ShooterState.AUTO),
                                         new TurretStateCommand(TurretSubsystem.TurretState.CENTER)
                                 )
                         ),

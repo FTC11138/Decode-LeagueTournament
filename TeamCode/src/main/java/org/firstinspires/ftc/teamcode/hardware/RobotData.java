@@ -33,17 +33,16 @@ public class RobotData {
     public IntakeSubsystem.IntakeState intakeState = IntakeSubsystem.IntakeState.STOP;
 
     public ShooterSubsystem.ShooterState shooterState = ShooterSubsystem.ShooterState.STOP;
+    public ShooterSubsystem.AdjHoodState hoodState = ShooterSubsystem.AdjHoodState.NONE;
 
     public double shooterTargetVelocity = 0;
     public double shooterCurrentVelocity1 = 0;
     public double shooterCurrentVelocity2 = 0;
     public double shooterCurrentRPM1 = 0;
     public double shooterCurrentRPM2 = 0;
+    public double hoodPos = 0;
 
     public TurretOdometrySubsystem.TurretState turretState = TurretOdometrySubsystem.TurretState.MANUAL;
-
-
-    public SpindexerTestSubsystem spindexerTestSubsystem;
 
     // Target point in FIELD coords
     public double turretTargetX = 0;
@@ -86,10 +85,7 @@ public class RobotData {
         telemetry.addLine("");
         telemetry.addLine("");
 
-        telemetry.addData("SPINDEXER VOLTAGE: ", spindexerCurrent);
-
-        telemetry.addLine("");
-
+        telemetry.addData("SPINDEXER CURRENT: ", spindexerCurrent);
         telemetry.addData("Spindexer Current Pos", spindexerCurrentPosition);
         telemetry.addData("Spindexer Target Pos", spindexerTargetPosition);
         telemetry.addData("Spindexer Moving", spindexerMoving);
@@ -106,19 +102,17 @@ public class RobotData {
 
         telemetry.addData("Intake State", intakeState);
 
-        telemetry.addData("Shooter1 Power", shooterCurrentRPM1);
-
-        telemetry.addData("Shooter2 Power", shooterCurrentRPM2);
-
         telemetry.addLine("");
         telemetry.addLine("");
 
         telemetry.addData("Shooter State", shooterState);
+        telemetry.addData("Hood State", hoodState);
         telemetry.addData("Shooter Target Vel", shooterTargetVelocity);
         telemetry.addData("Shooter Vel 1", shooterCurrentVelocity1);
         telemetry.addData("Shooter Vel 2", shooterCurrentVelocity2);
         telemetry.addData("Shooter RPM 1", shooterCurrentRPM1);
         telemetry.addData("Shooter RPM 2", shooterCurrentRPM2);
+        telemetry.addData("Hood Position", hoodPos);
 
         telemetry.addLine("");
         telemetry.addLine("");
@@ -136,7 +130,7 @@ public class RobotData {
         telemetry.addData("Turret Desired (deg)", String.format("%.2f", turretDesiredDeg));
         telemetry.addData("Turret Error (deg)", String.format("%.2f", turretErrorDeg));
         telemetry.addData("Turret Servo Pwr", String.format("%.3f", turretServoPower));
-        telemetry.addData("Distance From Goal From Odo", String.format("%.3f", dist));
+        telemetry.addData("Goal Distance", String.format("%.3f", dist));
         telemetry.update();
     }
 }
