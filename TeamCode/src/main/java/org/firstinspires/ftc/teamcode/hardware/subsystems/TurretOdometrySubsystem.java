@@ -268,6 +268,8 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         robot.data.turretDesiredDeg = getDesiredTurretAngleDeg();
         robot.data.turretErrorDeg =
                 calculateSmartError(robot.data.turretDesiredDeg, robot.data.turretAngleDeg);
+
+        robot.data.dist = getDist();
     }
 
     /* ================= Loop ================= */

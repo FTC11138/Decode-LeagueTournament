@@ -66,6 +66,10 @@ public class Constants {
 
     public static int shootWait = 1800;
 
+    public static double adjHoodMax = 0.205;
+    public static double adjHoodMin = 0.5;
+
+
 //    public static double ballDetectThreshold = 3.5;
 //    public static int ballDetectWait = 100;
 
