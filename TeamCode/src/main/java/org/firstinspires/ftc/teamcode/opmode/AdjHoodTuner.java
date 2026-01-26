@@ -12,12 +12,14 @@ import com.pedropathing.ftc.PoseConverter;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.commands.advancedcommand.SlowlyShootCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.IntakeStateCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.ShooterStateCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.TurretStateCommand;
 import org.firstinspires.ftc.teamcode.hardware.Robot;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
@@ -63,6 +65,7 @@ public class AdjHoodTuner extends CommandOpMode {
         g1 = new GamepadEx(gamepad1);
 
         Globals.IS_AUTO = false;
+        Globals.ALLIANCE = Globals.COLORS.BLUE;
         robot.initialize(hardwareMap, telemetry);
         robot.follower.setPose(PoseStorage.pose);
 
@@ -105,6 +108,10 @@ public class AdjHoodTuner extends CommandOpMode {
                 new InstantCommand(() -> {
                     automatic = !automatic;
                 })
+        );
+
+        g1.getGamepadButton(GamepadKeys.Button.B).whenPressed(
+                new SlowlyShootCommand()
         );
 
     }
@@ -161,7 +168,7 @@ public class AdjHoodTuner extends CommandOpMode {
                     leftTrigger,
                     new SequentialCommandGroup(
                             new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
-                            new TurretStateCommand(TurretSubsystem.TurretState.TRACK)
+                            new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
                     )
             );
 

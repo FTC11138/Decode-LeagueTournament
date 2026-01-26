@@ -19,14 +19,15 @@ import org.firstinspires.ftc.teamcode.hardware.Robot;
 import org.firstinspires.ftc.teamcode.hardware.RobotData;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
 import org.firstinspires.ftc.teamcode.util.PoseStorage;
 
-@Autonomous(name = "Auto_12_Red_AfterShock")
+@Autonomous(name = "Auto_12_Red_Close_15")
 @Configurable
-public class Auto_Red_AfterShock extends LinearOpMode {
+public class Auto_Red_Close_15 extends LinearOpMode {
 
 
 
@@ -51,13 +52,20 @@ public class Auto_Red_AfterShock extends LinearOpMode {
     public static double intake12Y = 88;
     public static double intake12Heading = 180 - 180;
 
-    public static double gateX = 127;
-    public static double gateY = 77;
-    public static double gateHeading = 90;
+    public static double gate1X = 128;
+    public static double gate1Y = 70;
+    public static double gate1Heading = 90;
+
+    public static double gate2X = 141;
+    public static double gate2Y = 48;
+    public static double gate2Heading = 90;
 
 
-    public static double gateControlX = 96;
-    public static double getGateControlY = 77;
+    public static double gateControl1X = 70;
+    public static double getGateControl1Y = 62;
+
+    public static double gateControl2X = 120;
+    public static double getGateControl2Y = 57;
 
 
     public static double shoot1X = shootX;
@@ -103,7 +111,8 @@ public class Auto_Red_AfterShock extends LinearOpMode {
     public static Path shoot0Path;
     public static Path intake11Path;
     public static Path intake12Path;
-    public static Path gateOpenPath;
+    public static Path gateOpen1Path;
+    public static Path gateOpen2Path;
     public static Path shoot1Path;
     public static Path intake21Path;
     public static Path intake22Path;
@@ -121,7 +130,8 @@ public class Auto_Red_AfterShock extends LinearOpMode {
         Pose shoot0Pose = new Pose(shoot0X, shoot0Y, Math.toRadians(shoot0Heading));
         Pose intake12Pose = new Pose(intake12X, intake12Y, Math.toRadians(intake12Heading));
         Pose intake11Pose = new Pose(intake11X, intake11Y, Math.toRadians(intake11Heading));
-        Pose gatePose = new Pose(gateX, gateY, Math.toRadians(gateHeading));
+        Pose gate1Pose = new Pose(gate1X, gate1Y, Math.toRadians(gate1Heading));
+        Pose gate2Pose = new Pose(gate2X, gate2Y, Math.toRadians(gate2Heading));
         Pose shoot1Pose = new Pose(shoot1X, shoot1Y, Math.toRadians(shoot1Heading));
         Pose intake21Pose = new Pose(intake21X, intake21Y, Math.toRadians(intake21Heading));
         Pose intake22Pose = new Pose(intake22X, intake22Y, Math.toRadians(intake22Heading));
@@ -134,23 +144,26 @@ public class Auto_Red_AfterShock extends LinearOpMode {
 
         Pose intake2PoseControl = new Pose(144 - 51.5, 55.7);
 
-        Pose gateControl = new Pose(gateControlX,getGateControlY);
+        Pose gateControl1 = new Pose(gateControl1X,getGateControl1Y);
+        Pose gateControl2 = new Pose(gateControl2X,getGateControl2Y);
 
 
 
 
         shoot0Path = buildPath(startPose, shoot0Pose, 0.5);
-        intake11Path = buildPath(shoot0Pose, intake11Pose, 0.05);
-        intake12Path = buildPath(intake11Pose, intake12Pose, 0.05);
-        gateOpenPath = buildCurve(intake12Pose, gatePose, gateControl,0.2);
-        shoot1Path = buildPath(gatePose, shoot1Pose);
-        intake21Path = buildPath(shoot1Pose, intake21Pose);
-        intake22Path = buildPath(intake21Pose, intake22Pose);
+        intake21Path = buildPath(shoot0Pose, intake21Pose, 0.05);
+        intake22Path = buildPath(intake21Pose, intake22Pose, 0.05);
         shoot2Path = buildCurve(intake22Pose, shoot2Pose, intake2PoseControl);
-        intake31Path = buildPath(shoot2Pose, intake31Pose);
-        intake32Path = buildPath(intake31Pose, intake32Pose);
-        shoot3Path = buildPath(intake32Pose, shoot3Pose);
-        movePath = buildPath(shoot2Pose, movePose);
+        gateOpen1Path = buildCurve(shoot2Pose, gate1Pose, gateControl1,0.2);
+        gateOpen2Path = buildCurve(gate1Pose, gate2Pose, gateControl2);
+        shoot3Path = buildPath(gate2Pose, shoot3Pose);
+        intake11Path = buildPath(shoot3Pose, intake11Pose);
+        intake12Path = buildPath(intake11Pose, intake12Pose);
+        shoot1Path = buildPath(intake12Pose, shoot1Pose);
+//        intake31Path = buildPath(shoot1Pose, intake31Pose);
+//        intake32Path = buildPath(intake31Pose, intake32Pose);
+//        shoot3Path = buildPath(intake32Pose, shoot3Pose);
+        movePath = buildPath(shoot1Pose, movePose);
 
 
 
@@ -188,34 +201,40 @@ public class Auto_Red_AfterShock extends LinearOpMode {
                         new PathCommand(shoot0Path).alongWith(
                                 new SequentialCommandGroup(
                                         new ShooterStateCommand(ShooterSubsystem.ShooterState.AUTO),
-                                        new TurretStateCommand(TurretSubsystem.TurretState.TRACK)
+                                        new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
                                 )
                         ),
 
-                        new WaitCommand(1500), // to let the launcher charge up
+                        new WaitCommand(1250), // to let the launcher charge up
                         //Shoot PreLoad
                         new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW()),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
-                        new WaitCommand(500),
-                        new PathCommand(intake11Path),
-                        new PathCommand(intake12Path,0.5),
-
-                        new PathCommand(gateOpenPath),
+                        new WaitCommand(300),
+                        new PathCommand(intake21Path),
+                        new PathCommand(intake22Path,0.7),
 
                         new WaitCommand(200),
-                        new PathCommand(shoot1Path).andThen(
+                        new PathCommand(shoot2Path).andThen(
                                 new WaitCommand(1000),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
                         new WaitCommand(300),
+
+                        new PathCommand(gateOpen1Path),
+
+                        new PathCommand(gateOpen2Path),
+
+                        new WaitCommand(300),
+
+                        new PathCommand(shoot3Path),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
-                        new PathCommand(intake21Path),
-                        new PathCommand(intake22Path,0.47),
+                        new PathCommand(intake11Path),
+                        new PathCommand(intake12Path,0.7),
 
                         new WaitCommand(200),
-                        new PathCommand(shoot2Path).andThen(
+                        new PathCommand(shoot1Path).andThen(
                                 new WaitCommand(1000),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),

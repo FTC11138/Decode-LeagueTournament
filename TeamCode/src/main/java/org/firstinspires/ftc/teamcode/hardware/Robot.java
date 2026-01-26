@@ -80,8 +80,7 @@ public class Robot {
                 this.hardwareMap,
                 names.turretServo,
                 names.leftFront,
-                cameraSubsystem,
-                turretOdometrySubsystem
+                cameraSubsystem
         );
 
         shooterSubsystem = new ShooterSubsystem(

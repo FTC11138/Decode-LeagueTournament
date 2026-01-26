@@ -12,6 +12,7 @@ import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.commands.drivecommand.PathCommand;
+import org.firstinspires.ftc.teamcode.commands.subsystem.AdjustableHoodStateCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.IntakeStateCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.ShooterStateCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.TurretStateCommand;
@@ -19,6 +20,7 @@ import org.firstinspires.ftc.teamcode.hardware.Robot;
 import org.firstinspires.ftc.teamcode.hardware.RobotData;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
@@ -175,7 +177,8 @@ public class Auto_12_Red extends LinearOpMode {
                         new PathCommand(shoot0Path).alongWith(
                                 new SequentialCommandGroup(
                                         new ShooterStateCommand(ShooterSubsystem.ShooterState.AUTO),
-                                        new TurretStateCommand(TurretSubsystem.TurretState.TRACK)
+                                        new AdjustableHoodStateCommand(ShooterSubsystem.AdjHoodState.AUTO),
+                                        new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
                                 )
                         ),
 

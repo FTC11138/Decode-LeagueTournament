@@ -19,6 +19,7 @@ import org.firstinspires.ftc.teamcode.hardware.Robot;
 import org.firstinspires.ftc.teamcode.hardware.RobotData;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
@@ -175,7 +176,7 @@ public class Auto_12_Blue extends LinearOpMode {
                         new PathCommand(shoot0Path).alongWith(
                                 new SequentialCommandGroup(
                                         new ShooterStateCommand(ShooterSubsystem.ShooterState.AUTO),
-                                        new TurretStateCommand(TurretSubsystem.TurretState.TRACK)
+                                        new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
                                 )
                         ),
 

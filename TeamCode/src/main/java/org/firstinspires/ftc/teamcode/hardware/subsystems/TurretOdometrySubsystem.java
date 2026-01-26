@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.hardware.subsystems;
 
+import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -29,13 +30,14 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     private final CRServo turretServo;
     private final DcMotorEx turretEncoder;
     private final Follower follower;
+    private final PIDController pid;
 
     private double targetX;
     private double targetY;
 
     // Offset from robot center to turret pivot, in inches (your original)
-    private final double turretOffsetX = -55.603 / 25.4;
-    private final double turretOffsetY = 0;
+    private final double turretOffsetX = 0;
+    private final double turretOffsetY = -2.19;
 
     // PID state (only used if outputsEnabled == true AND you set a tracking state)
     private double integral = 0.0;
@@ -45,7 +47,7 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     private double lastSetPower = 0.0;
 
     // IMPORTANT: prevents this subsystem from commanding the servo unless you explicitly enable it
-    private boolean outputsEnabled = false;
+    private boolean outputsEnabled = true;
 
     public enum TurretState {
         MANUAL,
@@ -53,6 +55,8 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         CENTER,
         AUTOANGLE
     }
+
+    private int degOffset = 0;
 
     private TurretState turretState;
 
@@ -68,12 +72,13 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     // These limits only matter if THIS subsystem is driving the servo.
     // If TurretSubsystem drives the servo, TurretSubsystem limits are the ones that matter.
     private static final double leftlim = -90;
-    private static final double rightlim = 90;
+    private static final double rightlim = 270;
 
     public TurretOdometrySubsystem(HardwareMap hw, String servoName, String encoderName, Follower follower) {
         this.turretServo = hw.get(CRServo.class, servoName);
         this.turretEncoder = hw.get(DcMotorEx.class, encoderName);
         this.follower = follower;
+        this.pid = new PIDController(Constants.kP_v, Constants.kI_v, Constants.kD_v);
 
         if (Globals.IS_AUTO) {
             turretEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -88,8 +93,8 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
             targetX = 0;
             targetY = 144;
         } else {
-            targetX = 137;
-            targetY = 137;
+            targetX = 144;
+            targetY = 144;
         }
 
         Robot.getInstance().subsystems.add(this);
@@ -133,6 +138,10 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         return follower.getPose() != null;
     }
 
+    public void updateOffset(int update) {
+        degOffset += update;
+    }
+
     /* ================= Encoder ================= */
 
     public double getRawTicks() {
@@ -166,11 +175,11 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         double tx, ty;
 
         if (Globals.ALLIANCE == Globals.COLORS.BLUE) {
-            tx = 17;
-            ty = 132.5;
+            tx = 12;
+            ty = 132;
         } else {
-            tx = 127;
-            ty = 132.5;
+            tx = 144 - 12;
+            ty = 132;
         }
 
         return Math.abs(Math.sqrt(Math.pow((tx - x), 2) + Math.pow((ty - y), 2)));
@@ -198,7 +207,7 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         double angleToTargetField = Math.atan2(targetY - turretY, targetX - turretX);
 
         // desired turret angle relative to robot heading
-        double desiredDeg = Math.toDegrees(angleToTargetField - heading);
+        double desiredDeg = Math.toDegrees(angleToTargetField - heading) + degOffset;
         return normalizeAngle(desiredDeg);
     }
 
@@ -269,6 +278,8 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         robot.data.turretErrorDeg =
                 calculateSmartError(robot.data.turretDesiredDeg, robot.data.turretAngleDeg);
 
+        robot.data.degOffset = degOffset;
+
         robot.data.dist = getDist();
     }
 
@@ -320,38 +331,43 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
         double angleToTargetField = Math.atan2(targetY - turretY, targetX - turretX);
 
-        double desiredTurretAngleDeg = normalizeAngle(Math.toDegrees(angleToTargetField - heading));
+        double desiredTurretAngleDeg = normalizeAngle(Math.toDegrees(angleToTargetField - heading) + degOffset);
         double currentTurretAngleDeg = getTurretAngleDeg();
 
-        double errDeg = calculateSmartError(desiredTurretAngleDeg, currentTurretAngleDeg);
+        pid.setPID(Constants.kP_v, Constants.kI_v, Constants.kD_v);
 
-        if (Math.abs(errDeg) < Constants.deadbandDeg) errDeg = 0.0;
+        double power = pid.calculate(currentTurretAngleDeg, desiredTurretAngleDeg);
 
-        errFiltDeg = Constants.errAlpha * errDeg + (1.0 - Constants.errAlpha) * errFiltDeg;
 
-        integral += errFiltDeg * dt;
-        if (Math.abs(errDeg) < Constants.deadbandDeg) integral *= 0.5;
-        integral = clamp(integral, -Constants.maxIntegral, Constants.maxIntegral);
-
-        double deriv = (errFiltDeg - lastErrDeg) / dt;
-        deriv = clamp(deriv, -Constants.maxDeriv, Constants.maxDeriv);
-        lastErrDeg = errFiltDeg;
-
-        double rawPower =
-                Constants.kP_v * errFiltDeg +
-                        Constants.kI_v * integral +
-                        Constants.kD_v * deriv;
-
-        if (Math.abs(errDeg) > Constants.deadbandDeg && Constants.kS > 0) {
-            rawPower += Math.signum(errFiltDeg) * Constants.kS;
-        }
-
-        double maxPower = clamp(Constants.maxPower, 0.0, 1.0);
-        double power = clamp(rawPower, -maxPower, maxPower);
-
-        if (Math.abs(power) >= maxPower - 1e-6 && Math.signum(power) == Math.signum(errFiltDeg)) {
-            integral *= 0.9;
-        }
+//        double errDeg = calculateSmartError(desiredTurretAngleDeg, currentTurretAngleDeg);
+//
+//        if (Math.abs(errDeg) < Constants.deadbandDeg) errDeg = 0.0;
+//
+//        errFiltDeg = Constants.errAlpha * errDeg + (1.0 - Constants.errAlpha) * errFiltDeg;
+//
+//        integral += errFiltDeg * dt;
+//        if (Math.abs(errDeg) < Constants.deadbandDeg) integral *= 0.5;
+//        integral = clamp(integral, -Constants.maxIntegral, Constants.maxIntegral);
+//
+//        double deriv = (errFiltDeg - lastErrDeg) / dt;
+//        deriv = clamp(deriv, -Constants.maxDeriv, Constants.maxDeriv);
+//        lastErrDeg = errFiltDeg;
+//
+//        double rawPower =
+//                Constants.kP_v * errFiltDeg +
+//                        Constants.kI_v * integral +
+//                        Constants.kD_v * deriv;
+//
+//        if (Math.abs(errDeg) > Constants.deadbandDeg && Constants.kS > 0) {
+//            rawPower += Math.signum(errFiltDeg) * Constants.kS;
+//        }
+//
+//        double maxPower = clamp(Constants.maxPower, 0.0, 1.0);
+//        double power = clamp(rawPower, -maxPower, maxPower);
+//
+//        if (Math.abs(power) >= maxPower - 1e-6 && Math.signum(power) == Math.signum(errFiltDeg)) {
+//            integral *= 0.9;
+//        }
 
         setTurretPower(power);
     }

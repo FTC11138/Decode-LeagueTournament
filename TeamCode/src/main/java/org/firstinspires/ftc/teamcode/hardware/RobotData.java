@@ -63,6 +63,7 @@ public class RobotData {
     public double angleToTargetFieldDeg = 0;   // atan2 result in field frame
     public double turretRawRelDeg = 0;         // (fieldAngle - heading) wrapped to [-180,180]
 
+    public int degOffset = 0;
     public double dist = 0;
 
     @SuppressLint("DefaultLocale")
@@ -131,6 +132,7 @@ public class RobotData {
         telemetry.addData("Turret Error (deg)", String.format("%.2f", turretErrorDeg));
         telemetry.addData("Turret Servo Pwr", String.format("%.3f", turretServoPower));
         telemetry.addData("Goal Distance", String.format("%.3f", dist));
+        telemetry.addData("Deg Offset", String.format("%d", degOffset));
         telemetry.update();
     }
 }
