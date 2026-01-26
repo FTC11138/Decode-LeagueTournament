@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.hardware.subsystems;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.math.MathFunctions;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -10,15 +11,18 @@ import org.firstinspires.ftc.teamcode.hardware.Robot;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;
 
+@Configurable
 public class ShooterSubsystem extends RE_SubsystemBase {
 
     private final DcMotorEx shooterMotor1;
     private final DcMotorEx shooterMotor2;
     private final Servo adjHood;
+    private final Servo led;
 
     public enum ShooterState {
         MANUAL,
         AUTO,
+        FAR,
         STOP
     }
 
@@ -26,6 +30,7 @@ public class ShooterSubsystem extends RE_SubsystemBase {
     public enum AdjHoodState {
         MANUAL,
         AUTO,
+        FAR,
         NONE,
     }
 
@@ -51,20 +56,81 @@ public class ShooterSubsystem extends RE_SubsystemBase {
 
 
     public static double flywheelSpeed(double goalDist) {
-        return MathFunctions.clamp(
-                -0.0662677 * Math.pow(goalDist, 2)
-                        + 0.630762 * goalDist
-                        - 1139.28191,
-                -2240,
-                0
-        );
+//        return MathFunctions.clamp(
+//                -5.14019 * goalDist
+//                        - 1152.57009,
+//                -1600,
+//                -1200
+//        );
+        return -1350;
+
     }
 
     public static double adjHoodPos(double goalDist) {
-        if (goalDist < 35) return 0.57;
-        if (goalDist < 90) return 0.47;
-        return 0.3;
+        return MathFunctions.clamp(
+                -0.0000312637*goalDist*goalDist*goalDist
+                        +0.0055157*goalDist*goalDist
+                        -0.30948*goalDist
+                        +5.85497,
+                Constants.adjHoodMax,
+                Constants.adjHoodMin
+        );
+
+//        if(goalDist >= 97){
+//            return Constants.shootHoodFar;
+//        }else {
+//            return Constants.shootHoodClose;
+//        }
+
+//        return MathFunctions.clamp(
+//                0.125111 * Math.sin((0.883255 * goalDist) - 2.19449 ) + 0.386575,
+//                Constants.adjHoodMax,
+//                Constants.adjHoodMin
+//        );
+
     }
+
+    // Nearest-neighbor selection using midpoints between your measured x_1 values.
+// Data (x_1 -> H, P):
+// 36 -> 0.54, -1275
+// 47 -> 0.34, -1325
+// 60 -> 0.38, -1425
+// 73 -> 0.36, -1600
+// 92 -> 0.36, -1625
+// 104 -> 0.39, -1725
+// 126 -> 0.38, -1850
+
+    /*
+
+    public static double adjHoodPos(double goalDist) {
+
+        // Midpoints: 41.5, 53.5, 66.5, 82.5, 98.0, 115.0
+        if (goalDist < 30) return 0.48;
+        else if (goalDist < 41.5) return 0.54;      // nearest to 36
+        else if (goalDist < 53.5) return 0.34; // nearest to 47
+        else if (goalDist < 66.5) return 0.38; // nearest to 60
+        else if (goalDist < 82.5) return 0.36; // nearest to 73
+        else if (goalDist < 98.0) return 0.36; // nearest to 92
+        else if (goalDist < 115.0) return 0.39;// nearest to 104
+        else return 0.38;                       // nearest to 126
+    }
+
+    public static double flywheelSpeed(double goalDist) {
+        // Optional special-case if you want one for super-close shots:
+        // if (goalDist < 35) return -1200; // <-- set whatever you want, or delete this
+
+        // Midpoints: 41.5, 53.5, 66.5, 82.5, 98.0, 115.0
+        if (goalDist < 41.5) return -1275;       // nearest to 36
+        else if (goalDist < 53.5) return -1325;  // nearest to 47
+        else if (goalDist < 66.5) return -1425;  // nearest to 60
+        else if (goalDist < 82.5) return -1600;  // nearest to 73
+        else if (goalDist < 98.0) return -1625;  // nearest to 92
+        else if (goalDist < 115.0) return -1725; // nearest to 104
+        else return -1850;                       // nearest to 126
+    }
+
+
+     */
 
     public ShooterSubsystem(HardwareMap hardwareMap,
                             String motorName1,
@@ -74,6 +140,7 @@ public class ShooterSubsystem extends RE_SubsystemBase {
         shooterMotor1 = hardwareMap.get(DcMotorEx.class, motorName1);
         shooterMotor2 = hardwareMap.get(DcMotorEx.class, motorName2);
         adjHood = hardwareMap.get(Servo.class, servoName1);
+        led = hardwareMap.get(Servo.class, "led");
 
         initMotor(shooterMotor1);
         initMotor(shooterMotor2);
@@ -99,12 +166,10 @@ public class ShooterSubsystem extends RE_SubsystemBase {
     }
 
     public void setHoodPos(double pos) {
-        adjHoodState = AdjHoodState.MANUAL;
         hoodPos = pos;
     }
 
     public void setShooterSpeed(double speed) {
-        shooterState = ShooterState.MANUAL;
         targetVelocity = speed;
     }
 
@@ -142,6 +207,13 @@ public class ShooterSubsystem extends RE_SubsystemBase {
             case AUTO:
                 shooterMotor1.setVelocity(flywheelSpeed(dist));
                 shooterMotor2.setVelocity(flywheelSpeed(dist));
+                targetVelocity = flywheelSpeed(dist);
+                break;
+            case FAR:
+                shooterMotor1.setVelocity(Constants.shootVelFar);
+                shooterMotor2.setVelocity(Constants.shootVelFar);
+                targetVelocity = Constants.shootVelFar;
+                break;
             case STOP:
                 shooterMotor1.setPower(0);
                 shooterMotor2.setPower(0);
@@ -156,9 +228,22 @@ public class ShooterSubsystem extends RE_SubsystemBase {
             case AUTO:
                 adjHood.setPosition(adjHoodPos(dist));
                 break;
+            case FAR:
+                adjHood.setPosition(Constants.shootHoodFar);
+                break;
             case NONE:
                 adjHood.setPosition(Constants.adjHoodMin);
                 break;
+        }
+
+        if (Math.abs(currentVelocity1 - targetVelocity) < 40) {
+            led.setPosition(0.444);
+        } else {
+            if (shooterState == ShooterState.FAR) {
+                led.setPosition(.65);
+            } else {
+                led.setPosition(1);
+            }
         }
 
 

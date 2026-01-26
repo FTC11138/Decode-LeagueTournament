@@ -45,6 +45,7 @@ public class Constants {
     public static double readyPower = -1.0;
     public static double reverseStopPower = 1;
     public static double lowerShootPower = 0.71;
+    public static double shootMultiplier = 1.0;
 
     public static double kP = 0.005; // to make response faster
     public static double kI = 0.000001; // for undershoot
@@ -60,14 +61,23 @@ public class Constants {
 
     public static double stuckCurrent = 2.5;
 
+    public static int shootBetweenWait = 600;
+
 
     public static int sensorWait = 620; // WAS 750
     public static int shootSensorWait = 1250;
 
     public static int shootWait = 1800;
 
-    public static double adjHoodMax = 0.205;
-    public static double adjHoodMin = 0.5;
+    public static double adjHoodMax = 0.02;
+    public static double adjHoodMin = 0.48;
+
+    public static double shootVelFar = -1900;
+
+    public static double shootVelClose = -1425;
+
+    public static double shootHoodFar = 0.38;
+    public static double shootHoodClose = 0.38;
 
 
 //    public static double ballDetectThreshold = 3.5;
@@ -93,8 +103,13 @@ public class Constants {
     public static double kS = 0.0;      //set to 0.03 is something is still messing up
 
     // PID gains mapping error->power (tune these)
-    public static double kP_v = 0.008;
-    public static double kI_v = 0.0005;
-    public static double kD_v = 0.0009;//0.0010
+//    public static double kP_v = 0.008;
+//    public static double kI_v = 0.0005;
+//    public static double kD_v = 0.0009;
+
+
+    public static double kP_v = 0.015;
+    public static double kI_v = 0;
+    public static double kD_v = 0.001;//0.0010
 }
 

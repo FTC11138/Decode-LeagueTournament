@@ -34,7 +34,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
     private final PIDController pid;
 
     private final DcMotorEx spindexerMotor;
-    private final Servo led;
+//    private final Servo led;
     private int targetPosition = 0;
 
     private double distance = 0;
@@ -75,7 +75,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
     public SpindexerTestSubsystem(HardwareMap hw, String motorName, String rangerName) {
         spindexerMotor = hw.get(DcMotorEx.class, motorName);
-        led = hw.get(Servo.class, "led");
+//        led = hw.get(Servo.class, "led");
 
         pid = new PIDController(Constants.spindexer_kP, Constants.spindexer_kI, Constants.spindexer_kD);
 
@@ -84,7 +84,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         spindexerMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         spindexerMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        spindexerMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        spindexerMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         targetPosition = 0;
 
@@ -133,6 +133,10 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         moveRelative(TICKS_120_DEG, MOVE_POWER);
     }
 
+    public void rotate120CW() {
+        moveRelative(-TICKS_120_DEG, MOVE_POWER);
+    }
+
     public void stop() {
         spindexerMotor.setPower(0);
     }
@@ -167,6 +171,7 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
     }
 
     private void moveRelative(double deltaTicks, double power) {
+        spindexerMotor.setPower(power);
         targetPosition += (int) deltaTicks;
         wasStuck = false; // Reset stuck flag when new movement is commanded
     }
@@ -233,14 +238,9 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 //            lastMovementTime = currentTime; // Reset timer
 //        }
 
-        double power;
-        if (Math.abs(error) < DEADBAND_TICKS) {
-            power = 0;
-        } else {
-            power = pid.calculate(currentPos, getTargetPosition());
-        }
-
-        spindexerMotor.setPower(power);
+        spindexerMotor.setTargetPosition(getTargetPosition());
+        spindexerMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        spindexerMotor.setPower(SHOOT_POWER);
 
 
         canRotate = ranger.getState();
@@ -261,17 +261,17 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
                     CommandScheduler.getInstance().schedule(new IntakeStateCommand(IntakeSubsystem.IntakeState.OUT));
                 }
 
-                if(ballCount == 1){
-                    led.setPosition(0.722);
-                }
-
-                if(ballCount == 2){
-                    led.setPosition(0.334);
-                }
-
-                if(ballCount == 3){
-                    led.setPosition(0.51);
-                }
+//                if(ballCount == 1){
+//                    led.setPosition(0.722);
+//                }
+//
+//                if(ballCount == 2){
+//                    led.setPosition(0.334);
+//                }
+//
+//                if(ballCount == 3){
+//                    led.setPosition(0.51);
+//                }
             }
         }
 
@@ -289,11 +289,11 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
         }
 
         if(ballCount == 3){
-            led.setPosition(0.51);
+//            led.setPosition(0.51);
         }
         else if (detectTime - lastDetectTime >= sensorWait) {
             ignoreSensor = false;
-            led.setPosition(0);
+//            led.setPosition(0);
         }
 
         lastBallDetected = ballDetected;
