@@ -13,6 +13,9 @@ import org.firstinspires.ftc.teamcode.hardware.Robot;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.wrappers.RE_SubsystemBase;
 
+import java.util.NavigableMap;
+import java.util.TreeMap;
+
 @Configurable
 public class ShooterSubsystem extends RE_SubsystemBase {
 
@@ -21,13 +24,12 @@ public class ShooterSubsystem extends RE_SubsystemBase {
     private final Servo adjHood;
     private final Servo led;
 
-    private final PIDFController pid;
-
     public enum ShooterState {
         MANUAL,
         AUTO,
         FAR,
-        STOP
+        STOP,
+        AUTONOMOUS
     }
 
     // ✅ keep same names
@@ -36,6 +38,7 @@ public class ShooterSubsystem extends RE_SubsystemBase {
         AUTO,
         FAR,
         NONE,
+        AUTONOMOUS
     }
 
     Robot robot = Robot.getInstance();
@@ -55,43 +58,41 @@ public class ShooterSubsystem extends RE_SubsystemBase {
     private double currentRPM2 = 0;
 
     private double dist = 0.0;
-
     private double hoodPos = 0;
 
+    private static class ShotPoint {
+        final double hood;
+        final double power; // or velocity target
 
-    public static double flywheelSpeed(double goalDist) {
-//        return MathFunctions.clamp(
-//                -5.14019 * goalDist
-//                        - 1152.57009,
-//                -1600,
-//                -1200
-//        );
-        return -1350;
-
+        ShotPoint(double hood, double power) {
+            this.hood = hood;
+            this.power = power;
+        }
     }
 
-    public static double adjHoodPos(double goalDist) {
-        return MathFunctions.clamp(
-                -0.0000312637*goalDist*goalDist*goalDist
-                        +0.0055157*goalDist*goalDist
-                        -0.30948*goalDist
-                        +5.85497,
-                Constants.adjHoodMax,
-                Constants.adjHoodMin
-        );
+    private static final NavigableMap<Double, ShotPoint> SHOT_TABLE = new TreeMap<>();
+    static {
+        SHOT_TABLE.put(33.8, new ShotPoint(0.47, -1275));
+        SHOT_TABLE.put(44.8, new ShotPoint(0.43, -1325));
+        SHOT_TABLE.put(50.8, new ShotPoint(0.37, -1425));
+        SHOT_TABLE.put(57.1, new ShotPoint(0.37, -1450));
+        SHOT_TABLE.put(69.9, new ShotPoint(0.33, -1500));
+        SHOT_TABLE.put(80.7, new ShotPoint(0.31, -1600));
+    }
 
-//        if(goalDist >= 97){
-//            return Constants.shootHoodFar;
-//        }else {
-//            return Constants.shootHoodClose;
-//        }
 
-//        return MathFunctions.clamp(
-//                0.125111 * Math.sin((0.883255 * goalDist) - 2.19449 ) + 0.386575,
-//                Constants.adjHoodMax,
-//                Constants.adjHoodMin
-//        );
+    private static ShotPoint nearestShotPoint(double goalDist) {
+        if (SHOT_TABLE.isEmpty()) return new ShotPoint(Constants.adjHoodMin, 0);
 
+        Double low = SHOT_TABLE.floorKey(goalDist);
+        Double high = SHOT_TABLE.ceilingKey(goalDist);
+
+        if (low == null) return SHOT_TABLE.get(high);
+        if (high == null) return SHOT_TABLE.get(low);
+
+        return (Math.abs(goalDist - low) <= Math.abs(high - goalDist))
+                ? SHOT_TABLE.get(low)
+                : SHOT_TABLE.get(high);
     }
 
     // Nearest-neighbor selection using midpoints between your measured x_1 values.
@@ -145,8 +146,6 @@ public class ShooterSubsystem extends RE_SubsystemBase {
         shooterMotor2 = hardwareMap.get(DcMotorEx.class, motorName2);
         adjHood = hardwareMap.get(Servo.class, servoName1);
         led = hardwareMap.get(Servo.class, "led");
-
-        pid = new PIDFController(Constants.kP_velo, Constants.kI_velo, Constants.kD_velo, Constants.kF_velo);
 
         initMotor(shooterMotor1);
         initMotor(shooterMotor2);
@@ -208,7 +207,7 @@ public class ShooterSubsystem extends RE_SubsystemBase {
             case MANUAL:
                 break;
             case AUTO:
-                targetVelocity = flywheelSpeed(dist);
+                targetVelocity = nearestShotPoint(dist).power;
                 break;
             case FAR:
                 targetVelocity = Constants.shootVelFar;
@@ -218,6 +217,8 @@ public class ShooterSubsystem extends RE_SubsystemBase {
                 shooterMotor2.setPower(0);
                 targetVelocity = 0;
                 break;
+            case AUTONOMOUS:
+                targetVelocity = -1325;
         }
 
         switch (adjHoodState) {
@@ -225,7 +226,7 @@ public class ShooterSubsystem extends RE_SubsystemBase {
                 adjHood.setPosition(MathFunctions.clamp(hoodPos, Constants.adjHoodMax, Constants.adjHoodMin));
                 break;
             case AUTO:
-                adjHood.setPosition(adjHoodPos(dist));
+                adjHood.setPosition(nearestShotPoint(dist).hood);
                 break;
             case FAR:
                 adjHood.setPosition(Constants.shootHoodFar);
@@ -233,6 +234,8 @@ public class ShooterSubsystem extends RE_SubsystemBase {
             case NONE:
                 adjHood.setPosition(Constants.adjHoodMin);
                 break;
+            case AUTONOMOUS:
+                adjHood.setPosition(0.37);
         }
 
         if (Math.abs(currentVelocity1 - targetVelocity) < 40) {
@@ -249,8 +252,8 @@ public class ShooterSubsystem extends RE_SubsystemBase {
 
         shooterMotor1.setVelocity(targetVelocity);
         shooterMotor2.setVelocity(targetVelocity);
-        shooterMotor1.setVelocityPIDFCoefficients(Constants.kP_velo, Constants.kI_velo, Constants.kD_velo, Constants.kF_velo);
-        shooterMotor2.setVelocityPIDFCoefficients(Constants.kP_velo, Constants.kI_velo, Constants.kD_velo, Constants.kF_velo);
+//        shooterMotor1.setVelocityPIDFCoefficients(Constants.kP_velo, Constants.kI_velo, Constants.kD_velo, Constants.kF_velo);
+//        shooterMotor2.setVelocityPIDFCoefficients(Constants.kP_velo, Constants.kI_velo, Constants.kD_velo, Constants.kF_velo);
 
 
 
