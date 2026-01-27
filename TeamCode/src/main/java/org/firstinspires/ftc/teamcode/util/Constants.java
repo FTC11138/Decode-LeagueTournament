@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.util;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.pedropathing.control.PIDFCoefficients;
 
 @Configurable
 public class Constants {
@@ -111,5 +112,10 @@ public class Constants {
     public static double kP_v = 0.015;
     public static double kI_v = 0;
     public static double kD_v = 0.001;//0.0010
+
+    public static double kP_velo = 0.0;
+    public static double kI_velo = 0.0;
+    public static double kD_velo = 0.0;
+    public static double kF_velo = 0.0;
 }
 

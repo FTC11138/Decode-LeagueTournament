@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.hardware.subsystems;
 
+import com.arcrobotics.ftclib.controller.PIDFController;
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.math.MathFunctions;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.hardware.Robot;
@@ -18,6 +20,8 @@ public class ShooterSubsystem extends RE_SubsystemBase {
     private final DcMotorEx shooterMotor2;
     private final Servo adjHood;
     private final Servo led;
+
+    private final PIDFController pid;
 
     public enum ShooterState {
         MANUAL,
@@ -142,6 +146,8 @@ public class ShooterSubsystem extends RE_SubsystemBase {
         adjHood = hardwareMap.get(Servo.class, servoName1);
         led = hardwareMap.get(Servo.class, "led");
 
+        pid = new PIDFController(Constants.kP_velo, Constants.kI_velo, Constants.kD_velo, Constants.kF_velo);
+
         initMotor(shooterMotor1);
         initMotor(shooterMotor2);
 
@@ -198,29 +204,22 @@ public class ShooterSubsystem extends RE_SubsystemBase {
                 .turretOdometrySubsystem
                 .getDist();
 
-        // Shooter control (UNCHANGED)
         switch (shooterState) {
             case MANUAL:
-                shooterMotor1.setVelocity(targetVelocity);
-                shooterMotor2.setVelocity(targetVelocity);
                 break;
             case AUTO:
-                shooterMotor1.setVelocity(flywheelSpeed(dist));
-                shooterMotor2.setVelocity(flywheelSpeed(dist));
                 targetVelocity = flywheelSpeed(dist);
                 break;
             case FAR:
-                shooterMotor1.setVelocity(Constants.shootVelFar);
-                shooterMotor2.setVelocity(Constants.shootVelFar);
                 targetVelocity = Constants.shootVelFar;
                 break;
             case STOP:
                 shooterMotor1.setPower(0);
                 shooterMotor2.setPower(0);
+                targetVelocity = 0;
                 break;
         }
 
-        // Hood control (one writer)
         switch (adjHoodState) {
             case MANUAL:
                 adjHood.setPosition(MathFunctions.clamp(hoodPos, Constants.adjHoodMax, Constants.adjHoodMin));
@@ -245,6 +244,14 @@ public class ShooterSubsystem extends RE_SubsystemBase {
                 led.setPosition(1);
             }
         }
+
+
+
+        shooterMotor1.setVelocity(targetVelocity);
+        shooterMotor2.setVelocity(targetVelocity);
+        shooterMotor1.setVelocityPIDFCoefficients(Constants.kP_velo, Constants.kI_velo, Constants.kD_velo, Constants.kF_velo);
+        shooterMotor2.setVelocityPIDFCoefficients(Constants.kP_velo, Constants.kI_velo, Constants.kD_velo, Constants.kF_velo);
+
 
 
         currentVelocity1 = shooterMotor1.getVelocity();
