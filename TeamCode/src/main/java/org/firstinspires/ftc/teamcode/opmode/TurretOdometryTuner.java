@@ -70,16 +70,16 @@ public class TurretOdometryTuner extends LinearOpMode {
 
             telemetry.addData("Current Angle", "%.2f°", robot.turretSubsystem.getTurretAngleDeg());
             telemetry.addData("", "");
-
-            telemetry.addData("Camera Sees Basket?", robot.cameraSubsystem.hasBasket() ? "YES" : "NO");
-            if (robot.cameraSubsystem.hasBasket()) {
-                telemetry.addData("Basket Yaw Error", "%.2f°", robot.cameraSubsystem.getBasketYawDeg());
-                telemetry.addData("Distance", "%.2f m", robot.cameraSubsystem.getBasketDistanceM());
-                telemetry.addData("In Range?", robot.cameraSubsystem.getShootDistance());
-            }
-            telemetry.addData("", "");
-
-            telemetry.addData("Obelisk", robot.cameraSubsystem.getObelisk());
+//
+//            telemetry.addData("Camera Sees Basket?", robot.cameraSubsystem.hasBasket() ? "YES" : "NO");
+//            if (robot.cameraSubsystem.hasBasket()) {
+//                telemetry.addData("Basket Yaw Error", "%.2f°", robot.cameraSubsystem.getBasketYawDeg());
+//                telemetry.addData("Distance", "%.2f m", robot.cameraSubsystem.getBasketDistanceM());
+//                telemetry.addData("In Range?", robot.cameraSubsystem.getShootDistance());
+//            }
+//            telemetry.addData("", "");
+//
+//            telemetry.addData("Obelisk", robot.cameraSubsystem.getObelisk());
             telemetry.addData("", "");
 
             telemetry.addLine("Controls:");

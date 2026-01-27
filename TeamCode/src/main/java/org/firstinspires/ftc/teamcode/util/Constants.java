@@ -89,7 +89,7 @@ public class Constants {
 
     /* -------------------------------------------- TURRET CONSTANTS -------------------------------------------- */
     // Controller helper params
-    public static double deadbandDeg = 0.2;
+    public static double deadbandDeg = 0;
     public static double errAlpha = 0.35;
 
     public static double CENTER_KP = 0.008;   // lower than 0.02
@@ -113,9 +113,9 @@ public class Constants {
     public static double kI_v = 0;
     public static double kD_v = 0.001;//0.0010
 
-    public static double kP_velo = 0.0;
+    public static double kP_velo = 0.75;
     public static double kI_velo = 0.0;
-    public static double kD_velo = 0.0;
-    public static double kF_velo = 0.0;
+    public static double kD_velo = 0.2;
+    public static double kF_velo = 14.0;
 }
 
