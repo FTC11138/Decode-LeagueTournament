@@ -182,7 +182,7 @@ public class Auto_12_Red extends LinearOpMode {
                                 )
                         ),
 
-                        new WaitCommand(1500), // to let the launcher charge up
+                        new WaitCommand(2200), // to let the launcher charge up
                         //Shoot PreLoad
                         new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW()),
                         //Intake In
@@ -197,7 +197,7 @@ public class Auto_12_Red extends LinearOpMode {
                                 new WaitCommand(1000),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
-                        new WaitCommand(500),
+                        new WaitCommand(300),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake21Path),
@@ -208,7 +208,7 @@ public class Auto_12_Red extends LinearOpMode {
                                 new WaitCommand(1000),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
-                        new WaitCommand(500),
+                        new WaitCommand(300),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake31Path),
@@ -219,7 +219,7 @@ public class Auto_12_Red extends LinearOpMode {
                                 new WaitCommand(1000),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
-                        new WaitCommand(600),
+                        new WaitCommand(300),
                         new ShooterStateCommand(ShooterSubsystem.ShooterState.STOP),
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.STOP),
                         new PathCommand(movePath)

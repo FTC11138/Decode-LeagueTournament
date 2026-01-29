@@ -44,12 +44,12 @@ public class Auto_9_Red_Far extends LinearOpMode {
 
     // Path 2
     public static double p2X = 102;
-    public static double p2Y = 35;
+    public static double p2Y = 34;
     public static double p2Heading = 0;
 
     // Path 3
     public static double p3X = 134;
-    public static double p3Y = 35;
+    public static double p3Y = 34;
     public static double p3Heading = 0;
 
     // Path 4
@@ -154,13 +154,13 @@ public class Auto_9_Red_Far extends LinearOpMode {
                         new WaitCommand(2500),
 
                         new SlowlyShootCommand(),
-
-                        new WaitCommand(2000),
+                        new SlowlyShootCommand(),
+                        new WaitCommand(500),
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         //new WaitCommand(500),
 
-                        new PathCommand(path2, 0.8),
-                        new PathCommand(path3),
+                        new PathCommand(path2, 0.7),
+                        new PathCommand(path3, 0.7),
 
                         new WaitCommand(200),
 
@@ -176,7 +176,7 @@ public class Auto_9_Red_Far extends LinearOpMode {
                         new PathCommand(path5),
                         new PathCommand(path6, 0.45),
 
-                        new WaitCommand(700),
+                        new WaitCommand(400),
 
                         new PathCommand(path7).andThen(
                                 new WaitCommand(1000),

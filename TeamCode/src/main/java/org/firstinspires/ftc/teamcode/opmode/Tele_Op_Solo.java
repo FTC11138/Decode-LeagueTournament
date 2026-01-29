@@ -61,8 +61,16 @@ public class Tele_Op_Solo extends CommandOpMode {
         g1.getGamepadButton(GamepadKeys.Button.A).whenPressed(
                 new ConditionalCommand(
                         new ShooterStateCommand(ShooterSubsystem.ShooterState.FAR).andThen(new AdjustableHoodStateCommand(ShooterSubsystem.AdjHoodState.FAR)),
+                        new ShooterStateCommand(ShooterSubsystem.ShooterState.FRONT).andThen(new AdjustableHoodStateCommand(ShooterSubsystem.AdjHoodState.AUTO)),
+                        () -> robot.shooterSubsystem.shooterState != ShooterSubsystem.ShooterState.FAR
+                )
+        );
+
+        g1.getGamepadButton(GamepadKeys.Button.B).whenPressed(
+                new ConditionalCommand(
                         new ShooterStateCommand(ShooterSubsystem.ShooterState.AUTO).andThen(new AdjustableHoodStateCommand(ShooterSubsystem.AdjHoodState.AUTO)),
-                        () -> robot.shooterSubsystem.shooterState == ShooterSubsystem.ShooterState.AUTO
+                        new ShooterStateCommand(ShooterSubsystem.ShooterState.FRONT).andThen(new AdjustableHoodStateCommand(ShooterSubsystem.AdjHoodState.AUTO)),
+                        () -> robot.shooterSubsystem.shooterState != ShooterSubsystem.ShooterState.AUTO
                 )
         );
 
@@ -143,7 +151,7 @@ public class Tele_Op_Solo extends CommandOpMode {
                 lastLeftTrigger,
                 leftTrigger,
                 new SequentialCommandGroup(
-                        new ShooterStateCommand(ShooterSubsystem.ShooterState.AUTO),
+                        new ShooterStateCommand(ShooterSubsystem.ShooterState.FRONT),
                         new AdjustableHoodStateCommand(ShooterSubsystem.AdjHoodState.AUTO),
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)

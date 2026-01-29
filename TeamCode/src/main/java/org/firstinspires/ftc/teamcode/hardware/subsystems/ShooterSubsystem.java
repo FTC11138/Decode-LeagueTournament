@@ -29,7 +29,8 @@ public class ShooterSubsystem extends RE_SubsystemBase {
         AUTO,
         FAR,
         STOP,
-        AUTONOMOUS
+        AUTONOMOUS,
+        FRONT
     }
 
     // ✅ keep same names
@@ -219,6 +220,8 @@ public class ShooterSubsystem extends RE_SubsystemBase {
                 break;
             case AUTONOMOUS:
                 targetVelocity = -1325;
+            case FRONT:
+                targetVelocity = -1400;
         }
 
         switch (adjHoodState) {

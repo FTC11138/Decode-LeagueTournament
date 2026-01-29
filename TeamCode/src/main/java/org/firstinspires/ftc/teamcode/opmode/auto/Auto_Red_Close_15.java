@@ -10,6 +10,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.commands.drivecommand.PathCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.IntakeStateCommand;
@@ -24,7 +25,7 @@ import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
 import org.firstinspires.ftc.teamcode.util.PoseStorage;
-
+@Disabled
 @Autonomous(name = "Auto_12_Red_Close_15")
 @Configurable
 public class Auto_Red_Close_15 extends LinearOpMode {
