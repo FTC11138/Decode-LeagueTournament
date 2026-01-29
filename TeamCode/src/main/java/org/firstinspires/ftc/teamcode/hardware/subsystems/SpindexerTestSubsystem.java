@@ -135,6 +135,10 @@ public class SpindexerTestSubsystem extends RE_SubsystemBase {
 
     public void rotate120CW() {
         moveRelative(-TICKS_120_DEG, MOVE_POWER);
+        ignoreSensor = true;
+        sensorWait = Constants.shootSingleSensorWait;
+        lastDetectTime = timer.time(TimeUnit.MILLISECONDS);
+        this.ballCount--;
     }
 
     public void stop() {
