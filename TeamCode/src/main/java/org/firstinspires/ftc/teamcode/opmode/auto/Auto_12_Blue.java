@@ -12,6 +12,7 @@ import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.commands.drivecommand.PathCommand;
+import org.firstinspires.ftc.teamcode.commands.subsystem.AdjustableHoodStateCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.IntakeStateCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.ShooterStateCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.TurretStateCommand;
@@ -44,12 +45,12 @@ public class Auto_12_Blue extends LinearOpMode {
     public static double shoot0Y = shootY;
     public static double shoot0Heading = shootHeading;
 
-    public static double intake11X = 144 - 90;
-    public static double intake11Y = 87;
+    public static double intake11X = 144-  90;
+    public static double intake11Y = 88;
     public static double intake11Heading = 180;
 
-    public static double intake12X = 17;
-    public static double intake12Y = 87;
+    public static double intake12X = 18;
+    public static double intake12Y = 88;
     public static double intake12Heading = 180;
 
 
@@ -59,8 +60,8 @@ public class Auto_12_Blue extends LinearOpMode {
 
 
     public static double intake21X = 47.5;
-    public static double intake21Y = 62;
-    public static double intake21Heading = 180;
+    public static double intake21Y = 64;
+    public static double intake21Heading =  180;
 
     public static double intake22X = 10;
     public static double intake22Y = intake21Y;
@@ -73,7 +74,7 @@ public class Auto_12_Blue extends LinearOpMode {
 
 
     public static double intake31X = 47;
-    public static double intake31Y = 39;
+    public static double intake31Y = 42;
     public static double intake31Heading = 180;
 
     public static double intake32X = 10;
@@ -84,7 +85,7 @@ public class Auto_12_Blue extends LinearOpMode {
     public static double shoot3Y = shootY;
     public static double shoot3Heading = shootHeading;
 
-    public static double moveX = 144 - 108;
+    public static double moveX = 144-  108;
     public static double moveY = 72;
     public static double moveHeading = 180 - 0;
 
@@ -123,7 +124,7 @@ public class Auto_12_Blue extends LinearOpMode {
         Pose movePose = new Pose(moveX, moveY, Math.toRadians(moveHeading));
 
 
-        Pose intake2PoseControl = new Pose(51.5, 55.7);
+        Pose intake2PoseControl = new Pose(144 - 51.5, 55.7);
 
 
 
@@ -158,7 +159,7 @@ public class Auto_12_Blue extends LinearOpMode {
 
         buildPaths();
         Constants.ballDetectWait = Constants.ballDetectWaitAuto;
-        Constants.shootPower = -0.645;
+//        Constants.shootPower = -0.645;
 
         robot.follower.setStartingPose(new Pose(startX, startY, Math.toRadians(startHeading)));
 
@@ -175,12 +176,13 @@ public class Auto_12_Blue extends LinearOpMode {
                 new SequentialCommandGroup(
                         new PathCommand(shoot0Path).alongWith(
                                 new SequentialCommandGroup(
-                                        new ShooterStateCommand(ShooterSubsystem.ShooterState.AUTO),
+                                        new ShooterStateCommand(ShooterSubsystem.ShooterState.AUTONOMOUS),
+                                        new AdjustableHoodStateCommand(ShooterSubsystem.AdjHoodState.AUTONOMOUS),
                                         new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
                                 )
                         ),
 
-                        new WaitCommand(1500), // to let the launcher charge up
+                        new WaitCommand(2200), // to let the launcher charge up
                         //Shoot PreLoad
                         new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW()),
                         //Intake In
@@ -195,7 +197,7 @@ public class Auto_12_Blue extends LinearOpMode {
                                 new WaitCommand(1000),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
-                        new WaitCommand(500),
+                        new WaitCommand(300),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake21Path),
@@ -206,7 +208,7 @@ public class Auto_12_Blue extends LinearOpMode {
                                 new WaitCommand(1000),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
-                        new WaitCommand(500),
+                        new WaitCommand(300),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake31Path),
@@ -217,7 +219,7 @@ public class Auto_12_Blue extends LinearOpMode {
                                 new WaitCommand(1000),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
-                        new WaitCommand(600),
+                        new WaitCommand(300),
                         new ShooterStateCommand(ShooterSubsystem.ShooterState.STOP),
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.STOP),
                         new PathCommand(movePath)

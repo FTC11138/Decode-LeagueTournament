@@ -220,8 +220,10 @@ public class ShooterSubsystem extends RE_SubsystemBase {
                 break;
             case AUTONOMOUS:
                 targetVelocity = -1325;
+                break;
             case FRONT:
                 targetVelocity = -1400;
+                break;
         }
 
         switch (adjHoodState) {
@@ -239,6 +241,7 @@ public class ShooterSubsystem extends RE_SubsystemBase {
                 break;
             case AUTONOMOUS:
                 adjHood.setPosition(0.37);
+                break;
         }
 
         if (Math.abs(currentVelocity1 - targetVelocity) < 40) {

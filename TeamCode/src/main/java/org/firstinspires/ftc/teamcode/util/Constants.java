@@ -62,7 +62,7 @@ public class Constants {
 
     public static double stuckCurrent = 2.5;
 
-    public static int shootBetweenWait = 600;
+    public static int shootBetweenWait = 300;
 
 
     public static int sensorWait = 620; // WAS 750
@@ -74,7 +74,7 @@ public class Constants {
     public static double adjHoodMax = 0.02;
     public static double adjHoodMin = 0.48;
 
-    public static double shootVelFar = -1900;
+    public static double shootVelFar = -1850;
 
     public static double shootVelClose = -1425;
 

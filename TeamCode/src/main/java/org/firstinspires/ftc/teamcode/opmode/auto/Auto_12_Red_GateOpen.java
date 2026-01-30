@@ -26,7 +26,7 @@ import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.Globals;
 import org.firstinspires.ftc.teamcode.util.PoseStorage;
 
-@Autonomous(name = "Auto_12_Red_GateOpen")
+@Autonomous(name = "Auto_9_Red_GateOpen")
 @Configurable
 public class Auto_12_Red_GateOpen extends LinearOpMode {
 

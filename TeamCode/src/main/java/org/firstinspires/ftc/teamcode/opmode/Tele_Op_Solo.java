@@ -164,10 +164,17 @@ public class Tele_Op_Solo extends CommandOpMode {
 
         // Touchpad: reset pose
         if (gamepad1.touchpad) {
+            double angleTemp = 0;
+            if(Globals.ALLIANCE == Globals.COLORS.BLUE){
+                angleTemp = 0;
+            }
+            else {
+                angleTemp = 180;
+            }
             robot.follower.setPose(new Pose(
                     robot.follower.getPose().getX(),
                     robot.follower.getPose().getY(),
-                    Globals.ALLIANCE == Globals.COLORS.BLUE ? Math.toRadians(0) : Math.toRadians(180)
+                    angleTemp
             ));
             gamepad1.rumble(500);
             gamepad1.setLedColor(0, 1, 0, 1000);
