@@ -28,7 +28,7 @@ public class SpindexerSubsystem extends RE_SubsystemBase {
 
     private static final double POSITION_TOLERANCE = 50.0; //Prevent nasty overshoot and undershoot
     private static final double ROTATION_POWER = 0.5;
-    private static final double SHOOT_POWER = 0.8;
+    private static final double SHOOT_POWER = 1.0;
 
     private static final int GREEN_HUE_MIN = 80;
     private static final int GREEN_HUE_MAX = 160;

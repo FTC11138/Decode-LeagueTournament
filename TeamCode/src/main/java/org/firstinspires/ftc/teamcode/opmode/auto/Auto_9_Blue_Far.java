@@ -26,59 +26,59 @@ import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsyste
 import org.firstinspires.ftc.teamcode.util.Globals;
 import org.firstinspires.ftc.teamcode.util.PoseStorage;
 
-@Autonomous(name = "Auto_9_Red_Far")
+@Autonomous(name = "Auto_9_Blue_Far")
 @Configurable
-public class Auto_9_Red_Far extends LinearOpMode {
+public class Auto_9_Blue_Far extends LinearOpMode {
 
     /* ---------------- START POSE ---------------- */
-    public static double startX = 79;
+    public static double startX = 144 - 79;
     public static double startY = 8.7;
     public static double startHeading = 90;
 
     /* ---------------- PATH POINTS ---------------- */
 
     // Path 1
-    public static double p1X = 84.5;
+    public static double p1X = 144 - 84.5;
     public static double p1Y = 16.5;
-    public static double p1Heading = 65;
+    public static double p1Heading = 180 - 65;
 
     // Path 2
-    public static double p2X = 102;
+    public static double p2X = 144 - 102;
     public static double p2Y = 34;
-    public static double p2Heading = 0;
+    public static double p2Heading = 180 - 0;
 
     // Path 3
-    public static double p3X = 134;
+    public static double p3X = 144 - 134;
     public static double p3Y = 34;
-    public static double p3Heading = 0;
+    public static double p3Heading = 180 - 0;
 
     // Path 4
-    public static double p4X = 84.5;
+    public static double p4X = 144 - 84.5;
     public static double p4Y = 16.5;
-    public static double p4Heading = 65;
+    public static double p4Heading = 180 - 65;
 
     // Path 5
-    public static double p5X = 134;
+    public static double p5X = 144 - 134;
     public static double p5Y = 17;
-    public static double p5Heading = 0;
+    public static double p5Heading = 180 - 0;
 
     // Path 6 (curve)
-    public static double p6X = 134;
+    public static double p6X = 144 - 134;
     public static double p6Y = 8;
-    public static double p6Heading = 0;
+    public static double p6Heading = 180 - 0;
 
-    public static double p6ControlX = 106;
+    public static double p6ControlX = 144 - 106;
     public static double p6ControlY = 10;
 
     // Path 7
-    public static double p7X = 84.5;
+    public static double p7X = 144 - 84.5;
     public static double p7Y = 16.5;
-    public static double p7Heading = 65;
+    public static double p7Heading = 180 - 65;
 
     // Path 8
-    public static double p8X = 84;
+    public static double p8X = 144-84;
     public static double p8Y = 38;
-    public static double p8Heading = 0;
+    public static double p8Heading = 180 - 0;
 
     /* ---------------- PATH OBJECTS ---------------- */
 
@@ -172,7 +172,7 @@ public class Auto_9_Red_Far extends LinearOpMode {
 
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
 
-                        new PathCommand(path5,0.6),
+                        new PathCommand(path5, 0.6),
                         new PathCommand(path6, 0.45),
 
                         new WaitCommand(400),
