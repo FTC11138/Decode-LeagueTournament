@@ -111,12 +111,25 @@ public class Tele_Op_Solo extends CommandOpMode {
             robot.updateData();
             robot.write();
 
-            robot.follower.setTeleOpDrive(
-                    -gamepad1.left_stick_y * 1.4,
-                    -gamepad1.left_stick_x * 1.4,
-                    -gamepad1.right_stick_x * 1.0,
-                    Constants.robotCentric // Robot Centric
-            );
+
+            switch (Globals.ALLIANCE) {
+                case RED:
+                    robot.follower.setTeleOpDrive(
+                            -gamepad1.left_stick_y * 1.4,
+                            -gamepad1.left_stick_x * 1.4,
+                            -gamepad1.right_stick_x * 1.0,
+                            Constants.robotCentric // Robot Centric
+                    );
+                    break;
+                case BLUE:
+                    robot.follower.setTeleOpDrive(
+                            -gamepad1.left_stick_y * 1.4,
+                            -gamepad1.left_stick_x * 1.4,
+                            -gamepad1.right_stick_x * 1.0,
+                            Constants.robotCentric, // Robot Centric
+                            Math.toRadians(180)
+                    );
+            }
 
 
         }
