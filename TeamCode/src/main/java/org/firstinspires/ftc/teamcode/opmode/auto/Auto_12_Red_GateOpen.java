@@ -32,14 +32,14 @@ public class Auto_12_Red_GateOpen extends LinearOpMode {
 
 
 
-    public static double startX = 144 - 30;
+    public static double startX = 114;
     public static double startY = 134.5;
     public static double startHeading = 90;
 
 
-    public static double shootX = 144 - 50;
+    public static double shootX = 94;
     public static double shootY = 103;
-    public static double shootHeading = 180 - 139;
+    public static double shootHeading = 41;
 
     public static double shoot0X = shootX;
     public static double shoot0Y = shootY;
@@ -47,18 +47,18 @@ public class Auto_12_Red_GateOpen extends LinearOpMode {
 
     public static double intake11X = 90;
     public static double intake11Y = 88;
-    public static double intake11Heading = 180 - 180;
+    public static double intake11Heading = 0;
 
-    public static double intake12X = 144 - 18;
+    public static double intake12X = 128.5;
     public static double intake12Y = 88;
-    public static double intake12Heading = 180 - 180;
+    public static double intake12Heading = 0;
 
-    public static double gateX = 127;
+    public static double gateX = 130;
     public static double gateY = 76;
     public static double gateHeading = 90;
 
 
-    public static double gateControlX = 96;
+    public static double gateControlX = 114;
     public static double getGateControlY = 77;
 
 
@@ -67,15 +67,15 @@ public class Auto_12_Red_GateOpen extends LinearOpMode {
     public static double shoot1Heading = shootHeading;
 
 
-    public static double intake21X = 144 - 47.5;
+    public static double intake21X = 96.5;
     public static double intake21Y = 64;
-    public static double intake21Heading = 180 - 180;
+    public static double intake21Heading = 0;
 
-    public static double intake22X = 144 - 10;
+    public static double intake22X = 135;
     public static double intake22Y = intake21Y;
-    public static double intake22Heading = 180 - 180;
+    public static double intake22Heading =  0;
 
-    public static double intake23X = 133.2;
+    public static double intake23X = 130;
     public static double intake23Y = 70.5;
     public static double intake23Heading = 90;
 
@@ -85,20 +85,20 @@ public class Auto_12_Red_GateOpen extends LinearOpMode {
     public static double shoot2Heading = shootHeading;
 
 
-    public static double intake31X = 144-47;
+    public static double intake31X = 97;
     public static double intake31Y = 42;
-    public static double intake31Heading = 180 - 180;
+    public static double intake31Heading = 0;
 
-    public static double intake32X = 144 - 10;
+    public static double intake32X = 134;
     public static double intake32Y = intake31Y;
-    public static double intake32Heading = 180 - 180;
+    public static double intake32Heading = 0;
 
     public static double shoot3X = shootX;
     public static double shoot3Y = shootY;
     public static double shoot3Heading = shootHeading;
 
-    public static double moveX = 108;
-    public static double moveY = 72;
+    public static double moveX = shootX-10;
+    public static double moveY = shootY + 6;
     public static double moveHeading = 0;
 
 
@@ -134,14 +134,14 @@ public class Auto_12_Red_GateOpen extends LinearOpMode {
         Pose intake22Pose = new Pose(intake22X, intake22Y, Math.toRadians(intake22Heading));
         Pose intake23Pose = new Pose(intake23X, intake23Y, Math.toRadians(intake23Heading));
         Pose shoot2Pose = new Pose(shoot2X, shoot2Y, Math.toRadians(shoot2Heading));
-        Pose intake31Pose = new Pose(intake31X, intake31Y, Math.toRadians(intake31Heading));
-        Pose intake32Pose = new Pose(intake32X, intake32Y, Math.toRadians(intake32Heading));
-        Pose shoot3Pose = new Pose(shoot3X, shoot3Y, Math.toRadians(shoot3Heading));
+//        Pose intake31Pose = new Pose(intake31X, intake31Y, Math.toRadians(intake31Heading));
+//        Pose intake32Pose = new Pose(intake32X, intake32Y, Math.toRadians(intake32Heading));
+//        Pose shoot3Pose = new Pose(shoot3X, shoot3Y, Math.toRadians(shoot3Heading));
         Pose movePose = new Pose(moveX, moveY, Math.toRadians(moveHeading));
 
 
-        Pose intake2PoseControl = new Pose(74.5, 49.5);
-        Pose intake23PoseControl = new Pose(80, 62);
+        Pose intake2PoseControl = new Pose(69.5, 49.5);
+        Pose intake23PoseControl = new Pose(89, 62);
 
         Pose gateControl = new Pose(gateControlX,getGateControlY);
 
@@ -155,8 +155,8 @@ public class Auto_12_Red_GateOpen extends LinearOpMode {
         shoot2Path = buildCurve(intake23Pose, shoot2Pose, intake2PoseControl);
         intake11Path = buildPath(shoot2Pose, intake11Pose, 0.05);
         intake12Path = buildPath(intake11Pose, intake12Pose, 0.05);
-        gateOpenPath = buildCurve(intake12Pose, gatePose, gateControl,0.2);
-        shoot1Path = buildPath(gatePose, shoot1Pose);
+//        gateOpenPath = buildCurve(intake12Pose, gatePose, gateControl,0.2);
+        shoot1Path = buildPath(intake12Pose, shoot1Pose);
 //        intake31Path = buildPath(shoot2Pose, intake31Pose);
 //        intake32Path = buildPath(intake31Pose, intake32Pose);
 //        shoot3Path = buildPath(intake32Pose, shoot3Pose);
@@ -180,7 +180,7 @@ public class Auto_12_Red_GateOpen extends LinearOpMode {
 
         buildPaths();
         Constants.ballDetectWait = Constants.ballDetectWaitAuto;
-        Constants.shootPower = -0.63;
+        Constants.shootPower = -0.64;
 
         robot.follower.setStartingPose(new Pose(startX, startY, Math.toRadians(startHeading)));
 
@@ -197,42 +197,41 @@ public class Auto_12_Red_GateOpen extends LinearOpMode {
                 new SequentialCommandGroup(
                         new ShooterStateCommand(ShooterSubsystem.ShooterState.AUTONOMOUS),
                         new AdjustableHoodStateCommand(ShooterSubsystem.AdjHoodState.AUTONOMOUS),
-
                         new PathCommand(shoot0Path).alongWith(
                                 new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
                         ),
 
-                        new WaitCommand(3500), // to let the launcher charge up
+                        new WaitCommand(1800), // to let the launcher charge up
                         //Shoot PreLoad
                         new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW()),
+                        new WaitCommand(700),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new WaitCommand(300),
                         new PathCommand(intake21Path),
-                        new PathCommand(intake22Path, 0.6),
+                        new PathCommand(intake22Path, 0.65),
                         new WaitCommand(500),
                         new PathCommand(intake23Path, 1),
                         new WaitCommand(500),
                         new PathCommand(shoot2Path).andThen(
-                                new WaitCommand(1250),
+                                new WaitCommand(1500),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
-                        new WaitCommand(200),
+                        new WaitCommand(500),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake11Path),
-                        new PathCommand(intake12Path, 0.6),
+                        new PathCommand(intake12Path, 0.7),
+
+
+//                        new PathCommand(gateOpenPath, 1),
 
                         new WaitCommand(500),
-
-                        new PathCommand(gateOpenPath, 0.7),
-
-                        new WaitCommand(200),
                         new PathCommand(shoot1Path).andThen(
-                                new WaitCommand(1000),
+                                new WaitCommand(1500),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
-                        new WaitCommand(200),
+                        new WaitCommand(500),
                         new ShooterStateCommand(ShooterSubsystem.ShooterState.STOP),
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.STOP),
                         new PathCommand(movePath)
@@ -278,63 +277,63 @@ public class Auto_12_Red_GateOpen extends LinearOpMode {
 //
 //
 //
-//        public static double startX = 20.5;
+//        public static double startX = 123.5;
 //        public static double startY = 123;
-//        public static double startHeading = 135;
+//        public static double startHeading = 45;
 //
 //
-//        public static double shoot0X = 55;
+//        public static double shoot0X = 89;
 //        public static double shoot0Y = 88;
-//        public static double shoot0Heading = 135;
+//        public static double shoot0Heading = 45;
 //
 //
-//        public static double intake1X = 23.5;
+//        public static double intake1X = 120.5;
 //        public static double intake1Y = 84;
-//        public static double intake1Heading = 180;
+//        public static double intake1Heading = 0;
 //
 //
-//        public static double shoot1X = 55;
+//        public static double shoot1X = 89;
 //        public static double shoot1Y = 88;
-//        public static double shoot1Heading = 135;
+//        public static double shoot1Heading = 45;
 //
 //
-//        public static double intake2X = 19;
+//        public static double intake2X = 125;
 //        public static double intake2Y = 60;
-//        public static double intake2Heading = 180;
+//        public static double intake2Heading = 0;
 //
 //
-//        public static double shoot2X = 55;
+//        public static double shoot2X = 89;
 //        public static double shoot2Y = 88;
-//        public static double shoot2Heading = 135;
+//        public static double shoot2Heading = 45;
 //
 //
-//        public static double intake3X = 20;
+//        public static double intake3X = 124;
 //        public static double intake3Y = 35.6;
-//        public static double intake3Heading = 180;
+//        public static double intake3Heading = 0;
 //
-//        public static double shoot3X = 55;
+//        public static double shoot3X = 89;
 //        public static double shoot3Y = 88;
-//        public static double shoot3Heading = 135;
+//        public static double shoot3Heading = 45;
 //
-//        public static double move3X = 70;
+//        public static double move3X = 74;
 //        public static double move3Y = 103.5;
-//        public static double moveHeading = 135;
+//        public static double moveHeading = 45;
 //
 //
 //
 //
 //        // control points for intaking
-//        public static double control1X = 80;
+//        public static double control1X = 64;
 //        public static double control1Y = 84;
 //
-//        public static double control2X = 69;
+//        public static double control2X = 75;
 //        public static double control2Y = 76;
-//        public static double control22X = 79;
+//        public static double control22X = 65;
 //        public static double control22Y = 56;
 //
-//        public static double control3X = 89.7;
+//        public static double control3X = 54.3;
 //        public static double control3Y = 31.5;
-//        public static double control32X = 66.5;
+//        public static double control32X = 77.5;
 //        public static double control32Y = 34;
 //
 //

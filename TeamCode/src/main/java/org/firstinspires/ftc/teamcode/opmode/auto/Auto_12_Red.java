@@ -85,7 +85,7 @@ public class Auto_12_Red extends LinearOpMode {
     public static double shoot3Y = shootY;
     public static double shoot3Heading = shootHeading;
 
-    public static double moveX = 108;
+    public static double moveX = 98;
     public static double moveY = 72;
     public static double moveHeading = 0;
 

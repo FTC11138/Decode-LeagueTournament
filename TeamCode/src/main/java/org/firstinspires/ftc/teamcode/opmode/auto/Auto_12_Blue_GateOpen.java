@@ -41,24 +41,24 @@ public class Auto_12_Blue_GateOpen extends LinearOpMode {
     public static double shootY = 103;
     public static double shootHeading = 139;
 
-    public static double shoot0X = 144 - shootX;
+    public static double shoot0X = shootX;
     public static double shoot0Y = shootY;
-    public static double shoot0Heading = 180 -  shootHeading;
+    public static double shoot0Heading = shootHeading;
 
     public static double intake11X = 144 - 90;
     public static double intake11Y = 88;
     public static double intake11Heading = 180;
 
-    public static double intake12X = 18;
+    public static double intake12X = 15.5;
     public static double intake12Y = 88;
     public static double intake12Heading = 180;
 
-    public static double gateX = 144 - 127;
+    public static double gateX = 144 - 129;
     public static double gateY = 76;
     public static double gateHeading = 180 - 90;
 
 
-    public static double gateControlX = 144 - 96;
+    public static double gateControlX = 144 - 112;
     public static double getGateControlY = 77;
 
 
@@ -71,11 +71,11 @@ public class Auto_12_Blue_GateOpen extends LinearOpMode {
     public static double intake21Y = 64;
     public static double intake21Heading = 180;
 
-    public static double intake22X = 10;
+    public static double intake22X = 9;
     public static double intake22Y = intake21Y;
     public static double intake22Heading =  180;
 
-    public static double intake23X = 144 - 133.2;
+    public static double intake23X = 144 - 134.5;
     public static double intake23Y = 70.5;
     public static double intake23Heading = 180 - 90;
 
@@ -134,14 +134,14 @@ public class Auto_12_Blue_GateOpen extends LinearOpMode {
         Pose intake22Pose = new Pose(intake22X, intake22Y, Math.toRadians(intake22Heading));
         Pose intake23Pose = new Pose(intake23X, intake23Y, Math.toRadians(intake23Heading));
         Pose shoot2Pose = new Pose(shoot2X, shoot2Y, Math.toRadians(shoot2Heading));
-        Pose intake31Pose = new Pose(intake31X, intake31Y, Math.toRadians(intake31Heading));
-        Pose intake32Pose = new Pose(intake32X, intake32Y, Math.toRadians(intake32Heading));
-        Pose shoot3Pose = new Pose(shoot3X, shoot3Y, Math.toRadians(shoot3Heading));
+//        Pose intake31Pose = new Pose(intake31X, intake31Y, Math.toRadians(intake31Heading));
+//        Pose intake32Pose = new Pose(intake32X, intake32Y, Math.toRadians(intake32Heading));
+//        Pose shoot3Pose = new Pose(shoot3X, shoot3Y, Math.toRadians(shoot3Heading));
         Pose movePose = new Pose(moveX, moveY, Math.toRadians(moveHeading));
 
 
         Pose intake2PoseControl = new Pose(74.5, 49.5);
-        Pose intake23PoseControl = new Pose(80, 62);
+        Pose intake23PoseControl = new Pose(55, 62);
 
         Pose gateControl = new Pose(gateControlX,getGateControlY);
 
@@ -155,8 +155,8 @@ public class Auto_12_Blue_GateOpen extends LinearOpMode {
         shoot2Path = buildCurve(intake23Pose, shoot2Pose, intake2PoseControl);
         intake11Path = buildPath(shoot2Pose, intake11Pose, 0.05);
         intake12Path = buildPath(intake11Pose, intake12Pose, 0.05);
-        gateOpenPath = buildCurve(intake12Pose, gatePose, gateControl,0.2);
-        shoot1Path = buildPath(gatePose, shoot1Pose);
+//        gateOpenPath = buildCurve(intake12Pose, gatePose, gateControl,0.2);
+        shoot1Path = buildPath(intake12Pose, shoot1Pose);
 //        intake31Path = buildPath(shoot2Pose, intake31Pose);
 //        intake32Path = buildPath(intake31Pose, intake32Pose);
 //        shoot3Path = buildPath(intake32Pose, shoot3Pose);
@@ -173,14 +173,14 @@ public class Auto_12_Blue_GateOpen extends LinearOpMode {
         Robot robot = Robot.getInstance();
         robot.data = new RobotData();
         Globals.IS_AUTO = true;
-        Globals.ALLIANCE = Globals.COLORS.RED;
+        Globals.ALLIANCE = Globals.COLORS.BLUE;
         robot.initialize(hardwareMap, telemetry);
         CommandScheduler.getInstance().reset();
 
 
         buildPaths();
         Constants.ballDetectWait = Constants.ballDetectWaitAuto;
-        Constants.shootPower = -0.63;
+        Constants.shootPower = -0.64;
 
         robot.follower.setStartingPose(new Pose(startX, startY, Math.toRadians(startHeading)));
 
@@ -197,45 +197,45 @@ public class Auto_12_Blue_GateOpen extends LinearOpMode {
                 new SequentialCommandGroup(
                         new ShooterStateCommand(ShooterSubsystem.ShooterState.AUTONOMOUS),
                         new AdjustableHoodStateCommand(ShooterSubsystem.AdjHoodState.AUTONOMOUS),
-
                         new PathCommand(shoot0Path).alongWith(
                                 new TurretStateCommand(TurretOdometrySubsystem.TurretState.TRACK_POINT)
                         ),
 
-                        new WaitCommand(3500), // to let the launcher charge up
+                        new WaitCommand(1800), // to let the launcher charge up
                         //Shoot PreLoad
                         new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW()),
+                        new WaitCommand(700),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new WaitCommand(300),
                         new PathCommand(intake21Path),
-                        new PathCommand(intake22Path, 0.6),
+                        new PathCommand(intake22Path, 0.65),
                         new WaitCommand(500),
                         new PathCommand(intake23Path, 1),
                         new WaitCommand(500),
                         new PathCommand(shoot2Path).andThen(
-                                new WaitCommand(1250),
+                                new WaitCommand(1500),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
-                        new WaitCommand(200),
+                        new WaitCommand(500),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake11Path),
-                        new PathCommand(intake12Path, 0.6),
+                        new PathCommand(intake12Path, 0.7),
 
                         new WaitCommand(500),
 
-                        new PathCommand(gateOpenPath, 0.7),
+//                        new PathCommand(gateOpenPath, 1),
 
-                        new WaitCommand(200),
+//                        new WaitCommand(600),
                         new PathCommand(shoot1Path).andThen(
-                                new WaitCommand(1000),
+                                new WaitCommand(1500),
                                 new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW())
                         ),
-                        new WaitCommand(200),
+                        new WaitCommand(500),
                         new ShooterStateCommand(ShooterSubsystem.ShooterState.STOP),
-                        new IntakeStateCommand(IntakeSubsystem.IntakeState.STOP),
-                        new PathCommand(movePath)
+                        new IntakeStateCommand(IntakeSubsystem.IntakeState.STOP)
+//                        new PathCommand(movePath)
                 )
         );
 

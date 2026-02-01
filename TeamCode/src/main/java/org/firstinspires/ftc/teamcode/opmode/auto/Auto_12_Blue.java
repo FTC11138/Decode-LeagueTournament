@@ -49,7 +49,7 @@ public class Auto_12_Blue extends LinearOpMode {
     public static double intake11Y = 88;
     public static double intake11Heading = 180;
 
-    public static double intake12X = 18;
+    public static double intake12X = 15;
     public static double intake12Y = 88;
     public static double intake12Heading = 180;
 
@@ -63,7 +63,7 @@ public class Auto_12_Blue extends LinearOpMode {
     public static double intake21Y = 64;
     public static double intake21Heading =  180;
 
-    public static double intake22X = 10;
+    public static double intake22X = 7;
     public static double intake22Y = intake21Y;
     public static double intake22Heading = 180;
 
@@ -77,7 +77,7 @@ public class Auto_12_Blue extends LinearOpMode {
     public static double intake31Y = 42;
     public static double intake31Heading = 180;
 
-    public static double intake32X = 10;
+    public static double intake32X = 7;
     public static double intake32Y = intake31Y;
     public static double intake32Heading = 180;
 
@@ -182,14 +182,14 @@ public class Auto_12_Blue extends LinearOpMode {
                                 )
                         ),
 
-                        new WaitCommand(2200), // to let the launcher charge up
+                        new WaitCommand(1700), // to let the launcher charge up
                         //Shoot PreLoad
                         new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW()),
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new WaitCommand(500),
                         new PathCommand(intake11Path),
-                        new PathCommand(intake12Path,0.5),
+                        new PathCommand(intake12Path,0.65),
 
 
                         new WaitCommand(200),
@@ -201,7 +201,7 @@ public class Auto_12_Blue extends LinearOpMode {
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake21Path),
-                        new PathCommand(intake22Path,0.47),
+                        new PathCommand(intake22Path,0.6),
 
                         new WaitCommand(200),
                         new PathCommand(shoot2Path).andThen(
@@ -212,7 +212,7 @@ public class Auto_12_Blue extends LinearOpMode {
                         //Intake In
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
                         new PathCommand(intake31Path),
-                        new PathCommand(intake32Path,0.47),
+                        new PathCommand(intake32Path,0.6),
 
                         new WaitCommand(200),
                         new PathCommand(shoot3Path).andThen(

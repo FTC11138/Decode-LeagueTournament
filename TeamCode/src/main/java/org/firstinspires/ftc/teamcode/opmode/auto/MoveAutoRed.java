@@ -20,20 +20,20 @@ import org.firstinspires.ftc.teamcode.hardware.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
 import org.firstinspires.ftc.teamcode.util.Globals;
 
-@Autonomous(name = "Auto_Move_Blue")
+@Autonomous(name = "Auto_Move_Red")
 @Configurable
-public class MoveAuto extends LinearOpMode {
+public class MoveAutoRed extends LinearOpMode {
 
 
 
     public static double startX = 64;
     public static double startY = 7;
-    public static double startHeading = 180;
+    public static double startHeading = 0;
 
 
-    public static double moveX = 35;
+    public static double moveX = 110;
     public static double moveY = 7;
-    public static double moveHeading = 180;
+    public static double moveHeading = 0;
 
 
     public static Path movePath;

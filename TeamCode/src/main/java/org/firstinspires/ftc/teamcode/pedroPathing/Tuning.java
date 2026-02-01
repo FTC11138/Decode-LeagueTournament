@@ -17,13 +17,18 @@ import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.ErrorCalculator;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.ftc.localization.constants.PinpointConstants;
 import com.pedropathing.geometry.*;
 import com.pedropathing.math.*;
 import com.pedropathing.paths.*;
 import com.pedropathing.telemetry.SelectableOpMode;
 import com.pedropathing.util.*;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.util.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -157,6 +162,15 @@ class LocalizationTest extends OpMode {
     public void loop() {
         follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
         follower.update();
+
+        PedroPathingConstants.localizerConstants = new PinpointConstants()
+                .forwardPodY(Constants.odoY)
+                .strafePodX(Constants.odoX)
+                .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
+                .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
+                .distanceUnit(DistanceUnit.INCH)
+                .hardwareMapName("odo")
+                .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
 
         telemetryM.debug("x:" + follower.getPose().getX());
         telemetryM.debug("y:" + follower.getPose().getY());

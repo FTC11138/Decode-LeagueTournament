@@ -5,6 +5,7 @@ import static org.firstinspires.ftc.teamcode.opmode.auto.AutonomousMethods.build
 
 import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.command.InstantCommand;
+import com.arcrobotics.ftclib.command.ParallelRaceGroup;
 import com.arcrobotics.ftclib.command.SequentialCommandGroup;
 import com.arcrobotics.ftclib.command.WaitCommand;
 import com.bylazar.configurables.annotations.Configurable;
@@ -13,6 +14,7 @@ import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.teamcode.commands.advancedcommand.Detect3BallsCommand;
 import org.firstinspires.ftc.teamcode.commands.advancedcommand.SlowlyShootCommand;
 import org.firstinspires.ftc.teamcode.commands.drivecommand.PathCommand;
 import org.firstinspires.ftc.teamcode.commands.subsystem.AdjustableHoodStateCommand;
@@ -59,16 +61,16 @@ public class Auto_9_Red_Far extends LinearOpMode {
 
     // Path 5
     public static double p5X = 134;
-    public static double p5Y = 17;
-    public static double p5Heading = 0;
+    public static double p5Y = 28;
+    public static double p5Heading = 290;
 
     // Path 6 (curve)
     public static double p6X = 134;
-    public static double p6Y = 8;
-    public static double p6Heading = 0;
+    public static double p6Y = 11;
+    public static double p6Heading = 290;
 
-    public static double p6ControlX = 106;
-    public static double p6ControlY = 10;
+//    public static double p6ControlX = 106;
+//    public static double p6ControlY = 10;
 
     // Path 7
     public static double p7X = 84.5;
@@ -104,14 +106,14 @@ public class Auto_9_Red_Far extends LinearOpMode {
         Pose pose7 = new Pose(p7X, p7Y, Math.toRadians(p7Heading));
         Pose pose8 = new Pose(p8X, p8Y, Math.toRadians(p8Heading));
 
-        Pose control6 = new Pose(p6ControlX, p6ControlY);
+//        Pose control6 = new Pose(p6ControlX, p6ControlY);
 
         path1 = buildPath(startPose, pose1);
         path2 = buildPath(pose1, pose2);
         path3 = buildPath(pose2, pose3);
         path4 = buildPath(pose3, pose4);
         path5 = buildPath(pose4, pose5);
-        path6 = buildCurve(pose5, pose6, control6);
+        path6 = buildPath(pose5, pose6);
         path7 = buildPath(pose6, pose7);
         path8 = buildPath(pose7, pose8);
     }
@@ -172,8 +174,12 @@ public class Auto_9_Red_Far extends LinearOpMode {
 
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN),
 
-                        new PathCommand(path5,0.6),
-                        new PathCommand(path6, 0.45),
+                        new PathCommand(path5),
+                        new ParallelRaceGroup(
+                                new PathCommand(path6, 0.45),
+                                new Detect3BallsCommand(),
+                                new WaitCommand(3500)
+                        ),
 
                         new WaitCommand(400),
 

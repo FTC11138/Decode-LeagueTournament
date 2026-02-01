@@ -15,6 +15,9 @@ public class Constants {
 
     public static boolean robotCentric = false;
 
+    public static double odoY = 5.4;
+    public static double odoX = -0.4;
+
     /* -------------------------------------------- CAMERA CONSTANTS -------------------------------------------- */
     //Pipeline: 0
     //Res: 1280X960 40FPS
@@ -76,10 +79,14 @@ public class Constants {
 
     public static double shootVelFar = -1850;
 
-    public static double shootVelClose = -1425;
+    public static double shootVelClose = -1450;
 
     public static double shootHoodFar = 0.38;
     public static double shootHoodClose = 0.38;
+
+    public static double autoHood = 0.4;
+
+    public static double autoVel = -1520;
 
 
 //    public static double ballDetectThreshold = 3.5;

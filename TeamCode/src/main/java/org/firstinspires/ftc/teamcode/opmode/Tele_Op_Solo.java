@@ -20,6 +20,7 @@ import org.firstinspires.ftc.teamcode.commands.subsystem.TurretStateCommand;
 import org.firstinspires.ftc.teamcode.hardware.Robot;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.ShooterSubsystem;
+import org.firstinspires.ftc.teamcode.hardware.subsystems.SpindexerTestSubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretOdometrySubsystem;
 import org.firstinspires.ftc.teamcode.hardware.subsystems.TurretSubsystem;
 import org.firstinspires.ftc.teamcode.util.Constants;
@@ -30,6 +31,7 @@ public class Tele_Op_Solo extends CommandOpMode {
 
     private final Robot robot = Robot.getInstance();
     private GamepadEx g1;
+    private GamepadEx g2;
 
     private boolean teleOpEnabled = false;
 
@@ -40,6 +42,8 @@ public class Tele_Op_Solo extends CommandOpMode {
     @Override
     public void initialize() {
         g1 = new GamepadEx(gamepad1);
+
+        g2 = new GamepadEx(gamepad2);
 
         Globals.IS_AUTO = false;
 
@@ -92,6 +96,10 @@ public class Tele_Op_Solo extends CommandOpMode {
                 new ShooterStateCommand(ShooterSubsystem.ShooterState.STOP)
         );
 
+//        g2.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(
+//
+//        )
+
         g1.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(
                 new InstantCommand(() -> robot.intakeSubsystem.updateIntakeState(IntakeSubsystem.IntakeState.OUT))
         );
@@ -140,6 +148,10 @@ public class Tele_Op_Solo extends CommandOpMode {
         if (!lastStart && start) {
             teleOpEnabled = true;
             gamepad1.rumble(2000);
+        }
+
+        if(robot.spindexerTestSubsystem.getBallCount() == 3){
+            gamepad2.rumble(100);
         }
 
         lastStart = start;

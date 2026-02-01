@@ -4,6 +4,7 @@ import com.arcrobotics.ftclib.controller.PIDFController;
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.math.MathFunctions;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
@@ -73,12 +74,12 @@ public class ShooterSubsystem extends RE_SubsystemBase {
 
     private static final NavigableMap<Double, ShotPoint> SHOT_TABLE = new TreeMap<>();
     static {
-        SHOT_TABLE.put(33.8, new ShotPoint(0.47, -1275));
-        SHOT_TABLE.put(44.8, new ShotPoint(0.43, -1325));
-        SHOT_TABLE.put(50.8, new ShotPoint(0.37, -1425));
-        SHOT_TABLE.put(57.1, new ShotPoint(0.37, -1450));
-        SHOT_TABLE.put(69.9, new ShotPoint(0.33, -1500));
-        SHOT_TABLE.put(80.7, new ShotPoint(0.31, -1600));
+        SHOT_TABLE.put(33.8, new ShotPoint(0.47, -1250));
+        SHOT_TABLE.put(44.8, new ShotPoint(0.43, -1300));
+        SHOT_TABLE.put(50.8, new ShotPoint(0.37, -1400));
+        SHOT_TABLE.put(57.1, new ShotPoint(0.37, -1425));
+        SHOT_TABLE.put(69.9, new ShotPoint(0.33, -1475));
+        SHOT_TABLE.put(80.7, new ShotPoint(0.31, -1575));
     }
 
 
@@ -151,6 +152,10 @@ public class ShooterSubsystem extends RE_SubsystemBase {
         initMotor(shooterMotor1);
         initMotor(shooterMotor2);
 
+        shooterMotor2.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        shooterMotor1.setDirection(DcMotorSimple.Direction.FORWARD);
+
         shooterState = ShooterState.STOP;
         adjHoodState = AdjHoodState.NONE;
         hoodPos = Constants.adjHoodMin;
@@ -162,6 +167,8 @@ public class ShooterSubsystem extends RE_SubsystemBase {
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
+
+
 
     public void updateShooterState(ShooterState newState) {
         shooterState = newState;
@@ -222,7 +229,7 @@ public class ShooterSubsystem extends RE_SubsystemBase {
                 targetVelocity = -1325;
                 break;
             case FRONT:
-                targetVelocity = -1400;
+                targetVelocity = Constants.shootVelClose;
                 break;
         }
 
@@ -240,7 +247,7 @@ public class ShooterSubsystem extends RE_SubsystemBase {
                 adjHood.setPosition(Constants.adjHoodMin);
                 break;
             case AUTONOMOUS:
-                adjHood.setPosition(0.37);
+                adjHood.setPosition(Constants.autoHood);
                 break;
         }
 

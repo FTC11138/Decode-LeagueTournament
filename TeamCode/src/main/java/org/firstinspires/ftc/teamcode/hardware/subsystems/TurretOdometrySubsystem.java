@@ -166,6 +166,10 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
         this.targetY = y;
     }
 
+    public void resetOdoHuman() {
+
+    }
+
     public double getDist() {
         Pose pose = follower.getPose();
         if (pose == null) return 0.0;
