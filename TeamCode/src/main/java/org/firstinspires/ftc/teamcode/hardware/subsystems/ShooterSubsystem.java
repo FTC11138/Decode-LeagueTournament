@@ -284,4 +284,14 @@ public class ShooterSubsystem extends RE_SubsystemBase {
     public double getTargetVelocity() { return targetVelocity; }
     public double getHoodPos() { return hoodPos; }
 
+    public boolean isShooterReady(){
+        double velocityError1 = Math.abs(currentVelocity1 - targetVelocity);
+        double velocityError2 = Math.abs(currentVelocity1 - targetVelocity);
+
+        boolean rpmReady = velocityError1 < Constants.shootVelTol && velocityError2 < Constants.shootVelTol;
+        boolean hoodError = Math.abs(adjHood.getPosition() - nearestShotPoint(dist).hood) < 0.015;
+
+        return rpmReady && hoodError && shooterState != ShooterState.STOP;
+    }
+
 }

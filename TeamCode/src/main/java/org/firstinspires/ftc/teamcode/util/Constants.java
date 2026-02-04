@@ -81,6 +81,8 @@ public class Constants {
 
     public static double shootVelClose = -1450;
 
+    public static double shootVelTol = 25;
+
     public static double shootHoodFar = 0.38;
     public static double shootHoodClose = 0.38;
 

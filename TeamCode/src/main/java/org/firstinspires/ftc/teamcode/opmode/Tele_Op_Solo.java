@@ -165,7 +165,11 @@ public class Tele_Op_Solo extends CommandOpMode {
                 lastRightTrigger,
                 rightTrigger,
                 new SequentialCommandGroup(
-                        new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW()),
+                        new ConditionalCommand(
+                                new InstantCommand(() -> robot.spindexerTestSubsystem.rotateShootCW()),
+                                new InstantCommand(() -> robot.spindexerTestSubsystem.stop()),
+                                () -> robot.shooterSubsystem.isShooterReady()
+                        ),
                         new WaitCommand(Constants.shootWait),
                         new IntakeStateCommand(IntakeSubsystem.IntakeState.IN)
                 )
