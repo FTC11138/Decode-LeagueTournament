@@ -38,7 +38,6 @@ public class Tele_Op_Solo extends CommandOpMode {
     private boolean lastLeftTrigger;
     private boolean lastRightTrigger;
     private boolean lastStart;
-
     @Override
     public void initialize() {
         g1 = new GamepadEx(gamepad1);
@@ -107,6 +106,7 @@ public class Tele_Op_Solo extends CommandOpMode {
         g1.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(
                 new SlowlyShootCommand()
         );
+
     }
 
     @Override
@@ -153,6 +153,14 @@ public class Tele_Op_Solo extends CommandOpMode {
         if(robot.spindexerTestSubsystem.getBallCount() == 3){
             gamepad2.rumble(100);
         }
+
+        if (g1.getButton(GamepadKeys.Button.X)) {
+            robot.turretOdometrySubsystem.runManualChange(gamepad2.right_stick_x);
+        }
+        if (g1.getButton(GamepadKeys.Button.Y)) {
+            robot.turretOdometrySubsystem.setTurretState(TurretOdometrySubsystem.TurretState.AUTOANGLE);
+        }
+
 
         lastStart = start;
 

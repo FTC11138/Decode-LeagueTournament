@@ -46,6 +46,7 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
     private long lastNanos = 0L;
     private double lastSetPower = 0.0;
 
+
     // IMPORTANT: prevents this subsystem from commanding the servo unless you explicitly enable it
     private boolean outputsEnabled = true;
 
@@ -415,6 +416,14 @@ public class TurretOdometrySubsystem extends RE_SubsystemBase {
 
         setTurretPower(power);
     }
+
+
+    public void runManualChange(double input) {
+        double maxPower = 0.4;
+        double power = clamp(input, -1.0, 1.0) * maxPower;
+        setTurretPower(power);
+    }
+
 
     private void runAutoAnglePID() {
         long now = System.nanoTime();
