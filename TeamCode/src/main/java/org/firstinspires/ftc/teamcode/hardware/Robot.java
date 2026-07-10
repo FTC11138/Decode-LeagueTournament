@@ -59,6 +59,8 @@ public class Robot {
 
         if (!Globals.IS_AUTO) follower.startTeleopDrive();
 
+        subsystems = new ArrayList<>();
+
         cameraSubsystem = new CameraSubsystem(
                 this.hardwareMap,
                 names.limelight
@@ -95,8 +97,6 @@ public class Robot {
         );
 
 
-
-        subsystems = new ArrayList<>();
 
     }
 
